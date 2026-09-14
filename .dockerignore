@@ -7,7 +7,9 @@
 **/dist
 apps/web
 docs
-infra
+infra/*
+!infra/migrations
+!infra/migrations/**
 virtuapet_articles.md
 *.zip
 *.log
