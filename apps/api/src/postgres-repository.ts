@@ -15,9 +15,15 @@ import type { PetRepository } from "./repository.js";
 
 const petFromRow = (row: Record<string, unknown>): PetProfile => ({
   petId: String(row.pet_id), guardianId: String(row.guardian_id), name: String(row.name), species: row.species as PetProfile["species"],
-  ...(row.birth_date ? { birthDate: String(row.birth_date).slice(0, 10) } : {}), ...(row.microchip_id ? { microchipId: String(row.microchip_id) } : {}),
+  ...(row.birth_date ? { birthDate: dateOnlyFromRow(row.birth_date) } : {}), ...(row.microchip_id ? { microchipId: String(row.microchip_id) } : {}),
   recordVersion: Number(row.record_version), createdAt: new Date(String(row.created_at)).toISOString(), updatedAt: new Date(String(row.updated_at)).toISOString()
 });
+const dateOnlyFromRow = (value: unknown): string => {
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  const text = String(value);
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? text.slice(0, 10) : parsed.toISOString().slice(0, 10);
+};
 const grantFromRow = (row: Record<string, unknown>): ConsentGrant => ({ grantId: String(row.grant_id), petId: String(row.pet_id), grantorUserId: String(row.grantor_user_id), granteeId: String(row.grantee_id), scopes: row.scopes as ConsentGrant["scopes"], purpose: String(row.purpose), startsAt: new Date(String(row.starts_at)).toISOString(), expiresAt: new Date(String(row.expires_at)).toISOString(), revokedAt: row.revoked_at ? new Date(String(row.revoked_at)).toISOString() : null });
 
 export class PostgresPetRepository implements PetRepository {
@@ -58,7 +64,7 @@ export class PostgresPetRepository implements PetRepository {
       studyId: String(row.study_id), petId: String(row.pet_id), clinicId: String(row.clinic_id),
       studyInstanceUid: String(row.study_instance_uid), ...(row.accession_number ? { accessionNumber: String(row.accession_number) } : {}),
       ...(row.study_description ? { studyDescription: String(row.study_description) } : {}),
-      ...(row.study_date ? { studyDate: String(row.study_date).slice(0, 10) } : {}),
+      ...(row.study_date ? { studyDate: dateOnlyFromRow(row.study_date) } : {}),
       patientNameAnonymized: String(row.patient_name_anonymized), status: row.status, createdAt: new Date(row.created_at).toISOString()
     });
   }
@@ -70,7 +76,7 @@ export class PostgresPetRepository implements PetRepository {
       studyId: String(row.study_id), petId: String(row.pet_id), clinicId: String(row.clinic_id),
       studyInstanceUid: String(row.study_instance_uid), ...(row.accession_number ? { accessionNumber: String(row.accession_number) } : {}),
       ...(row.study_description ? { studyDescription: String(row.study_description) } : {}),
-      ...(row.study_date ? { studyDate: String(row.study_date).slice(0, 10) } : {}),
+      ...(row.study_date ? { studyDate: dateOnlyFromRow(row.study_date) } : {}),
       patientNameAnonymized: String(row.patient_name_anonymized), status: row.status, createdAt: new Date(row.created_at).toISOString()
     });
   }
@@ -80,7 +86,7 @@ export class PostgresPetRepository implements PetRepository {
       studyId: String(row.study_id), petId: String(row.pet_id), clinicId: String(row.clinic_id),
       studyInstanceUid: String(row.study_instance_uid), ...(row.accession_number ? { accessionNumber: String(row.accession_number) } : {}),
       ...(row.study_description ? { studyDescription: String(row.study_description) } : {}),
-      ...(row.study_date ? { studyDate: String(row.study_date).slice(0, 10) } : {}),
+      ...(row.study_date ? { studyDate: dateOnlyFromRow(row.study_date) } : {}),
       patientNameAnonymized: String(row.patient_name_anonymized), status: row.status, createdAt: new Date(row.created_at).toISOString()
     }));
   }
