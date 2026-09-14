@@ -1,12 +1,14 @@
 # VirtuaPet Phase 3 Clinical Validation Protocol
 
+> Status: planned external protocol. This repository contains no enrolled patients, participating-hospital evidence, governed representative dataset, or completed clinical results. Its generated 50-record fixture is for software calculation tests only.
+
 ## Document Control
 
 | Field | Value |
 |---|---|
 | Document ID | VP-VAL-003 |
 | Version | 1.0 |
-| Status | Approved Clinical Validation Protocol for Phase 3 |
+| Status | Draft protocol; external clinical and regulatory approval required |
 | Intended Use Reference | `docs/product/PHASE_3_INTENDED_USE.md` (Canine TPLO CT) |
 | Author | Clinical Safety, Regulatory, and Engineering Teams |
 
@@ -33,7 +35,7 @@ The VirtuaPet system reconstructs 3D canine stifle anatomy and computes TPLO sur
 ### 2.2 Strict Cohort Separation
 To prevent data contamination and overly optimistic validation:
 1. **Patient-Level Isolation**: No patient appears in more than one cohort.
-2. **Site-Level Isolation**: The Independent Holdout cohort is gathered from independent veterinary surgical centers that were completely excluded from model training, calibration, and hyperparameter tuning.
+2. **Site-Level Isolation**: The Independent Holdout cohort must be gathered from independent veterinary surgical centers that are completely excluded from model training, calibration, and hyperparameter tuning.
 3. **Partition Scheme**:
    - **Training Cohort**: Used for algorithm development and reference template building.
    - **Tuning / Validation Cohort**: Used for threshold tuning, calibration, and parameter optimization.

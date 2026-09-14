@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomUUID } from "node:crypto";
+import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import type {
   ClinicalModel, GibiWorldManifest, ImagingMesh, ImagingSegmentation,
   ImagingSeries, ImagingVolume
@@ -122,8 +122,9 @@ export function extractSurfaceMesh(
 export function createSignedModel(
   series: ImagingSeries,
   meshes: ImagingMesh[],
-  signingKey: string = "virtuapet_clinical_secret_key"
+  signingKey: string
 ): ClinicalModel {
+  assertSigningKey(signingKey);
   const modelId = randomUUID();
   const now = new Date().toISOString();
   const structures = meshes.map(m => ({
@@ -212,8 +213,9 @@ export function generateGibiWorldManifest(
   petId: string,
   clinicId: string,
   baseUrl: string,
-  signingKey: string = "virtuapet_clinical_secret_key"
+  signingKey: string
 ): GibiWorldManifest {
+  assertSigningKey(signingKey);
   const expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
   const assetUrl = `${baseUrl}/v1/imaging/models/${model.modelId}/asset.glb`;
   const manifestData = [model.modelId, petId, clinicId, model.laterality, expiresAt].join("|");
@@ -252,15 +254,22 @@ export function verifyRehearsalEligibility(
     laterality: "L" | "R";
     deviceProfile: string;
     signatureToVerify: string;
-  }
+  },
+  signingKey: string
 ): RehearsalAccessVerification {
+  assertSigningKey(signingKey);
   // 1. Must be approved
   if (model.status !== "approved") {
     return { allowed: false, reason: `model_not_approved_for_rehearsal: status is ${model.status}` };
   }
 
   // 2. Signatures must match
-  if (manifest.signature !== request.signatureToVerify) {
+  const expectedSignature = createHmac("sha256", signingKey)
+    .update([model.modelId, manifest.petId, manifest.clinicId, model.laterality, manifest.expiresAt].join("|"))
+    .digest("hex");
+  const supplied = Buffer.from(request.signatureToVerify, "hex");
+  const expected = Buffer.from(expectedSignature, "hex");
+  if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected) || manifest.signature !== expectedSignature) {
     return { allowed: false, reason: "invalid_manifest_signature" };
   }
 
@@ -290,4 +299,10 @@ export function verifyRehearsalEligibility(
   }
 
   return { allowed: true };
+}
+
+function assertSigningKey(signingKey: string): void {
+  if (Buffer.byteLength(signingKey, "utf8") < 32) {
+    throw new Error("CLINICAL_TWIN_SIGNING_KEY must contain at least 32 bytes");
+  }
 }

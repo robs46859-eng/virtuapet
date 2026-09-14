@@ -18,7 +18,13 @@ import { registerImagingRoutes } from "./imaging/routes.js";
 
 declare module "fastify" { interface FastifyRequest { principal?: Principal } }
 
-export interface AppOptions { environment?: string; repository?: PetRepository; verifyPrincipal?: PrincipalVerifier; }
+export interface AppOptions {
+  environment?: string;
+  repository?: PetRepository;
+  verifyPrincipal?: PrincipalVerifier;
+  clinicalSigningKey?: string;
+  publicApiBaseUrl?: string;
+}
 const protectedPrefixes = ["/v1/pets", "/v1/regulations", "/v1/organizations", "/v1/imaging"];
 
 async function ownedPet(repository: PetRepository, petId: string, principal: Principal) {
@@ -40,6 +46,10 @@ export async function buildApp(options: AppOptions = {}) {
   const environment = options.environment ?? process.env.VIRTUAPET_ENV ?? "development";
   const repository = options.repository ?? new MemoryPetRepository();
   const verifyPrincipal = options.verifyPrincipal ?? verifierFromEnvironment();
+  const clinicalSigningKey = options.clinicalSigningKey ?? process.env.CLINICAL_TWIN_SIGNING_KEY ?? (environment === "test" ? "test-only-clinical-signing-key-32-bytes" : undefined);
+  if (!clinicalSigningKey) throw new Error("CLINICAL_TWIN_SIGNING_KEY is required outside tests");
+  const publicApiBaseUrl = options.publicApiBaseUrl ?? process.env.PUBLIC_API_BASE_URL ?? (environment === "production" ? undefined : "http://127.0.0.1:8080");
+  if (!publicApiBaseUrl) throw new Error("PUBLIC_API_BASE_URL is required in production");
   const app = Fastify({ logger: environment !== "test", genReqId: () => randomUUID() });
   await app.register(helmet);
   await app.register(cors, { origin: environment === "development" });
@@ -164,6 +174,6 @@ export async function buildApp(options: AppOptions = {}) {
   app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/inventory",async(request,reply)=>{ const principal=request.principal!; const member=await repository.findMembership(request.params.organizationId,principal.userId); if(!member||!["clinic_admin","vet_staff","veterinarian"].includes(member.role))return reply.code(403).send({error:"clinic_membership_required"}); const parsed=createInventoryItemSchema.safeParse(request.body); if(!parsed.success)return reply.code(400).send({error:"invalid_inventory",issues:parsed.error.issues}); const item:InventoryItem=inventoryItemSchema.parse({...parsed.data,inventoryItemId:randomUUID(),clinicId:request.params.organizationId,updatedByUserId:principal.userId,updatedAt:new Date().toISOString()}); return reply.code(201).send(await repository.createInventoryItem(item)); });
   app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/messages",async(request,reply)=>{ const principal=request.principal!; const member=await repository.findMembership(request.params.organizationId,principal.userId); if(!member)return reply.code(403).send({error:"clinic_membership_required"}); const parsed=createClinicMessageSchema.safeParse(request.body); if(!parsed.success)return reply.code(400).send({error:"invalid_message",issues:parsed.error.issues}); if(!await hasActiveClinicGrant(repository,parsed.data.petId,{...principal,organizationId:request.params.organizationId},"pet.profile.read"))return reply.code(403).send({error:"active_consent_required"}); const item:ClinicMessage=clinicMessageSchema.parse({...parsed.data,messageId:randomUUID(),clinicId:request.params.organizationId,authorUserId:principal.userId,createdAt:new Date().toISOString()}); return reply.code(201).send(await repository.createClinicMessage(item)); });
 
-  await registerImagingRoutes(app, repository);
+  await registerImagingRoutes(app, repository, { signingKey: clinicalSigningKey, publicApiBaseUrl });
   return app;
 }

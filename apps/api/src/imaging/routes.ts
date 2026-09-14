@@ -42,7 +42,12 @@ async function hasActiveClinicGrant(
   );
 }
 
-export async function registerImagingRoutes(app: FastifyInstance, repository: PetRepository) {
+export interface ImagingRouteOptions {
+  signingKey: string;
+  publicApiBaseUrl: string;
+}
+
+export async function registerImagingRoutes(app: FastifyInstance, repository: PetRepository, options: ImagingRouteOptions) {
   // 1. Quarantine & Ingestion inspection
   app.post("/v1/imaging/quarantine-check", async (request, reply) => {
     const body = request.body as { fileName: string; contentBase64?: string };
@@ -247,7 +252,7 @@ export async function registerImagingRoutes(app: FastifyInstance, repository: Pe
     const meshes = await repository.listImagingMeshesBySegmentationId(latestSeg.segmentationId);
     if (meshes.length === 0) return reply.code(400).send({ error: "meshes_required" });
 
-    const model = createSignedModel(series, meshes);
+    const model = createSignedModel(series, meshes, options.signingKey);
     const created = await repository.createClinicalModel(model);
 
     // Compute and record initial QA metrics
@@ -473,7 +478,7 @@ export async function registerImagingRoutes(app: FastifyInstance, repository: Pe
       const study = series ? await repository.findImagingStudyById(series.studyId) : undefined;
       if (!study) return reply.code(404).send({ error: "study_not_found" });
 
-      const manifest = generateGibiWorldManifest(model, study.petId, study.clinicId, "https://api.virtuapet.net");
+      const manifest = generateGibiWorldManifest(model, study.petId, study.clinicId, options.publicApiBaseUrl, options.signingKey);
 
       // Verify request parameters against rehearsal gates
       const device = request.query.deviceProfile ?? "AppleVisionPro_visionOS2";
@@ -485,7 +490,7 @@ export async function registerImagingRoutes(app: FastifyInstance, repository: Pe
         laterality: reqLaterality,
         deviceProfile: device,
         signatureToVerify: manifest.signature
-      });
+      }, options.signingKey);
 
       if (!check.allowed) {
         return reply.code(403).send({ error: check.reason });
@@ -496,7 +501,10 @@ export async function registerImagingRoutes(app: FastifyInstance, repository: Pe
   );
 
   // 11. Multi-Site Holdout Clinical Validation Execution
-  app.post("/v1/imaging/validation/run", async (_request, reply) => {
+  app.post("/v1/imaging/validation/run", async (request, reply) => {
+    if (!request.principal!.roles.includes("platform_admin")) {
+      return reply.code(403).send({ error: "platform_admin_required" });
+    }
     const report = runFullValidation();
     return reply.code(200).send(report);
   });

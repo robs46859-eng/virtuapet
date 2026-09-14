@@ -2,9 +2,9 @@
 
 ## Closeout Decision
 
-Phase 3 is code-complete and accepted as an engineering validation release. The system implements an isolated veterinary imaging service, strict contracts, secure ingestion, reproducible reconstruction, multi-label segmentation, clinician correction, watertight mesh generation, quantitative QA, cryptographic signing, veterinarian approval enforcement, rehearsal session management, GibiWorld entitlement delivery, and an independent multi-site holdout validation harness for Canine TPLO CT planning.
+Phase 3 is accepted only as an engineering prototype. It implements contracts, metadata checks, state transitions, persistence adapters, access gates, metric calculations, and signed manifest delivery. Reconstruction, segmentation, mesh extraction, GLB patient geometry, and the reported clinical metrics are placeholders or synthetic fixtures and are not clinically validated capabilities.
 
-This decision certifies code completion, unit and integration test passage, contract compliance, and validation harness execution against the approved representative holdout cohort. In accordance with platform governance, it separates engineering pilot completion from live external production authorization, prospective clinical trial certification, and physical device approvals.
+This decision records unit and integration test passage against generated fixtures. It does not certify DICOM conformance, clinical accuracy, clinical effectiveness, hospital participation, usability, production deployment, or device safety.
 
 ## Release Identification
 
@@ -13,7 +13,7 @@ This decision certifies code completion, unit and integration test passage, cont
 | Document ID | VP-ACCEPT-003 |
 | Release | Phase 3 Clinical Digital Twin Validation |
 | Repository | robs46859-eng/virtuapet |
-| Acceptance Level | Code-complete engineering validation release |
+| Acceptance Level | Engineering prototype; clinical validation blocked |
 | Intended Use | Canine TPLO Computed Tomography Pre-Operative Planning and Virtual Rehearsal |
 | Production Authorization | Not granted (operational deployment gate) |
 | Clinical-Use Authorization | Not granted (prospective clinical study gate) |
@@ -26,23 +26,23 @@ This decision certifies code completion, unit and integration test passage, cont
 | **Validation Protocol** | Protocol in `docs/product/PHASE_3_VALIDATION_PROTOCOL.md` specifying patient-separated and site-separated training, tuning, and holdout cohorts across 3 referral hospitals | Accepted |
 | **Contracts & State Machines** | Strict schemas for Study, Series, Volume, Segmentation, Mesh, Clinical Model, Plan, Rehearsal, QA Result, Correction, Review, GibiWorld Manifest, and Audit Events in `@virtuapet/contracts` | Accepted and tested (10 contract tests) |
 | **Quarantine & Malicious-File Defense** | Rejection of PE/ELF/Mach-O binaries, path traversal (`../`), files > 100 MB, and files without valid DICOM preambles | Accepted and tested (`inspectFileQuarantine`) |
-| **DICOM De-identification** | PS 3.15 Annex E compliant anonymization of direct human PII with salted SHA-256 hash while retaining critical patient physics and geometry | Accepted and tested (`deidentifyDicom`) |
+| **DICOM metadata de-identification** | Prototype replacement and hashing of fields represented by the current internal metadata type | Engineering test only; PS 3.15 conformance not established |
 | **Series Integrity & Geometry** | Verification of contiguous slice positions (delta Z == slice thickness +/- 0.05 mm), pixel spacing <= 0.75 mm, orthonormal orientation vectors in LPS, modality CT, and zero tolerance for patient or laterality mismatch | Accepted and tested (`validateDicomSeries`) |
-| **Volume Reconstruction** | 3D lattice reconstruction in `DICOM_LPS` coordinate frame with calibrated `HU` density units | Accepted and tested |
-| **Segmentation & Clinician Correction** | Multi-label bone segmentation (Tibia, Femur, Patella, Fibula); versioned clinician correction creating immutable parent-linked iterations | Accepted and tested |
-| **Watertight Mesh & Topology Repair** | Isosurface extraction with topology validation ensuring watertight 2-manifold surfaces with 0 non-manifold edges | Accepted and tested |
-| **Cryptographic Model Packaging** | Binary GLB packaging with custom `VIRTUAPET_clinical_twin` extension, physical scale (1.0 mm), `glTF_Y_UP` coordinate frame, and HMAC-SHA256 signature | Accepted and tested (`packageGlb`) |
+| **Volume record creation** | Creates dimensions, spacing, coordinate labels, and lineage hashes from series metadata | Placeholder accepted; no voxel decoding or HU reconstruction |
+| **Segmentation & correction lineage** | Creates structure labels and immutable parent-linked correction records | Contract/state prototype only; no segmentation model or voxel edits |
+| **Mesh records** | Creates mesh metadata records | Blocked: no isosurface extraction, geometry validation, or topology repair |
+| **Prototype model packaging** | Emits a GLB-shaped metadata container and signs model/manifest claims with HMAC-SHA256 | Signing gate accepted; renderable patient geometry and standards validation blocked |
 | **Source-Linked Clinical Review** | Endpoint displaying DICOM metadata alongside 3D structures, scale, laterality, QA results, warnings, version history, and explicit non-diagnostic disclaimer | Accepted and tested (`GET /v1/imaging/models/:modelId`) |
 | **Veterinarian Approval Gate** | Only verified `veterinarian` role can approve models; approval requires checklist confirmation; rejection requires explicit reason; rehearsal is locked until approved | Accepted and tested (`POST /v1/imaging/models/:modelId/review`) |
 | **TPLO Surgical Planning** | Plan creation enforcing target TPA (5.0 deg), blade radius selection (18-33 mm), rotation chord distance, and tuberosity safe margin (>= 10.0 mm hard stop) | Accepted and tested |
 | **GibiWorld Rehearsal Delivery** | Manifest delivery failing closed on unapproved models, patient mismatch, laterality mismatch, invalid signatures, expired entitlements, or unsupported devices | Accepted and tested (`GET /v1/imaging/models/:modelId/gibiworld-manifest`) |
-| **Multi-Site Holdout Validation** | Evaluation of 50 independent holdout cases across 3 referral hospitals, 4 body sizes, 4 scanner vendors, 3 protocols, and 3 pathologies | Accepted and tested (`runFullValidation`) |
+| **Metric calculation harness** | Evaluation of 50 deterministic synthetic records labeled `synthetic_fixture` | Accepted for calculation testing only; no clinical evidence |
 | **PostgreSQL Persistence** | Migration `003_phase3_clinical_imaging.sql` and persistent round-trip script covering all Phase 3 imaging entities | Accepted and verified |
 | **Build & Test Quality** | Type checks, 25 automated tests, production builds, and clean Git state | Accepted |
 
-## Quantitative Validation Results (50 Holdout Cases)
+## Synthetic Calculation Results (Not Clinical Validation)
 
-The independent holdout evaluation was executed against 50 distinct canine patients across 3 independent referral hospitals:
+The harness generated 50 deterministic records in code. The values below only show that threshold calculations execute; they must not be attributed to patients, hospitals, scanners, surgeons, or real usability sessions.
 
 | Metric | Target / Gate | Holdout Result | Outcome |
 |---|---|---|---|
@@ -93,9 +93,9 @@ In accordance with VirtuaPet governance, the following operational and clinical 
 1. **Veterinary Clinical Board Review**: Formal review and sign-off on surgical planning workflows by an accredited veterinary surgery specialist committee (DACVS/DECVS).
 2. **Multi-Center Prospective Clinical Trial**: Prospective study comparing pre-op CT digital twins with post-operative surgical outcomes across live clinical patient cohorts.
 3. **Physical Spatial Hardware Certification**: Hardware-in-the-loop validation of GibiWorld rehearsal on physical Apple Vision Pro and Meta Quest 3 headsets under surgical theater illumination.
-4. **Cloud Infrastructure & HSM Deployment**: Deployment to Azure Container Apps with Key Vault Managed Hardware Security Modules (HSM) for production digital twin asset signing.
+4. **Production Infrastructure & HSM Deployment**: Verified Hostinger-first deployment plus a managed or hardware-backed signing service for production digital-twin assets.
 5. **Final Production Commercial Authorization**: Commercial release approval by executive, clinical safety, and regulatory officers.
 
 ## Phase 4 Entry Decision
 
-With Phase 3 code-complete, verified, and validated against the 50-case multi-site holdout cohort with zero patient/laterality mismatches and zero hidden subgroup failures, Phase 4 (Spatial and Mobility Pilots) is authorized to begin from this baseline.
+Phase 4 may begin only as non-clinical engineering work. Clinical or patient-connected work remains blocked until real pipeline implementation, representative validation, veterinary approval, device evidence, and production controls are complete.

@@ -2,7 +2,9 @@
 
 ## Current release
 
-Phase 1, Phase 2, and the Phase 3 Clinical Twin Validation release are code-complete. Phase 3 provides an isolated veterinary imaging service, strict contracts, secure DICOM quarantine and ingestion, de-identification, slice contiguity validation, volume reconstruction, multi-label bone segmentation, clinician correction versioning, watertight mesh topology repair, signed GLB packaging, veterinary approval gating, TPLO surgical planning, GibiWorld manifest delivery, PostgreSQL migration 003, and an independent multi-site holdout validation harness.
+Phase 1 and Phase 2 are code-complete at their documented engineering levels. Phase 3 is an engineering prototype: it provides imaging contracts, metadata validation, correction lineage, access gates, signed manifest delivery, PostgreSQL migration 003, and synthetic metric-calculation fixtures. It does not yet implement or validate a clinical DICOM-to-digital-twin pipeline.
+
+Deployment status as of 2026-09-14: `virtuapet.com`, `www.virtuapet.com`, and `api.virtuapet.com` returned no A or CNAME records during the latest check. The user expects the domain to become available shortly. This is a pending external activation, not a failed deployment and not proof of launch.
 
 The authoritative closeouts are:
 - Phase 1: `docs/product/PHASE_1_ACCEPTANCE.md`
@@ -24,7 +26,7 @@ They separate completed engineering evidence from outstanding operational, exter
 
 - Approved narrow intended use: Canine TPLO Computed Tomography Pre-Operative Planning and Virtual Rehearsal (`docs/product/PHASE_3_INTENDED_USE.md`).
 - Approved validation protocol: Multi-site patient-separated holdout design across 3 referral hospitals (`docs/product/PHASE_3_VALIDATION_PROTOCOL.md`).
-- Multi-site holdout results (50 cases):
+- Synthetic calculation-fixture results (50 generated records; not patients or hospitals):
   - 100% patient, study, series, laterality, units, and orientation preservation (0 mismatches).
   - 100% source-to-rendered-structure traceability.
   - 100% veterinarian pre-rehearsal approval enforcement.
@@ -36,7 +38,7 @@ They separate completed engineering evidence from outstanding operational, exter
   - 94.0% unassisted rehearsal completion (GATE-09).
   - Median SUS 87.5 / 100 (GATE-10).
   - Zero hidden subgroup failures across body size, scanner, protocol, or pathology (GATE-11).
-- 25 passing automated tests across contracts, API, and imaging services.
+- 25 passing automated tests across contracts, API, and imaging services at the last recorded baseline; rerun after every change.
 
 ## Phase 4 spatial and mobility pilots
 
@@ -57,8 +59,9 @@ They separate completed engineering evidence from outstanding operational, exter
 
 - Configure live identity and membership synchronization.
 - Integrate Layer8 signed decisions, Stripe entitlements, API management, audit, and human escalation.
-- Deploy Azure development, staging, and production boundaries with Key Vault HSM signing keys.
-- Publish verified Hostinger artifacts with rollback.
+- Deploy the Hostinger-first topology in `docs/architecture/HOSTINGER_DEPLOYMENT_SPECIFICATION.md`, with separate development, staging, and production boundaries.
+- Publish and verify Hostinger website and API artifacts with rollback; operate PostgreSQL 16 on a dedicated Hostinger VPS only after backup, restore, TLS, patching, monitoring, and least-privilege evidence exists.
+- Store runtime values in Hostinger environment-variable controls. A hardware-backed or managed signing service remains mandatory before clinical authorization; an hPanel or VPS environment value is only an engineering-pilot fallback.
 - Add Service Bus publication, RLS, backup, restore, recovery, security, and accessibility evidence.
 - Maintain the independent SugarDaddy.lgbt governance and data boundary.
 

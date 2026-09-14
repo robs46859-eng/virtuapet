@@ -49,6 +49,7 @@ export interface SubgroupMetrics {
 }
 
 export interface FullValidationReport {
+  evidenceClass: "synthetic_fixture" | "externally_collected";
   timestamp: string;
   totalCases: number;
   independentSitesCount: number;
@@ -75,9 +76,10 @@ export interface FullValidationReport {
   noHiddenSubgroupFailures: boolean;
 }
 
-// Generate the 50-case independent clinical holdout cohort
+// Deterministic synthetic fixtures for exercising the validation calculations.
+// These records are not patients, hospital data, or evidence of clinical performance.
 export function createHoldoutCohort(): HoldoutCase[] {
-  const sites = ["Site_A_Colorado", "Site_B_Pacific", "Site_C_Midwest"];
+  const sites = ["Synthetic_Site_A", "Synthetic_Site_B", "Synthetic_Site_C"];
   const bodySizes: Array<"small" | "medium" | "large" | "giant"> = ["small", "medium", "large", "giant"];
   const vendors: Array<"GE" | "Siemens" | "Philips" | "Canon"> = ["GE", "Siemens", "Philips", "Canon"];
   const protocols: Array<"standard" | "high_res" | "thick_slice"> = ["standard", "high_res", "thick_slice"];
@@ -266,6 +268,7 @@ export function runFullValidation(cases: HoldoutCase[] = createHoldoutCohort()):
   const passedAllGates = overall.passedAllGates && noHiddenSubgroupFailures;
 
   return {
+    evidenceClass: "synthetic_fixture",
     timestamp: new Date().toISOString(),
     totalCases: cases.length,
     independentSitesCount: 3,

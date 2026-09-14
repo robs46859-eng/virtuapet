@@ -8,8 +8,7 @@ import {
 } from "./imaging/dicom.js";
 import {
   reconstructVolumeFromSeries, segmentVolume, applyClinicianCorrection,
-  extractSurfaceMesh, createSignedModel, packageGlb, generateGibiWorldManifest,
-  verifyRehearsalEligibility
+  extractSurfaceMesh, packageGlb
 } from "./imaging/pipeline.js";
 import { evaluateClinicalGates, computeDice, computeHausdorff95, computeLinearError, computeAngularError } from "./imaging/qa.js";
 import { runFullValidation, createHoldoutCohort } from "./imaging/validation-harness.js";
@@ -421,11 +420,12 @@ describe("Phase 3 Clinical Twin Validation Suite", () => {
   });
 
   describe("Validation Harness & Subgroup Evaluation", () => {
-    it("evaluates 50 multi-site holdout cases without hidden subgroup failure", () => {
+    it("evaluates 50 synthetic calculation fixtures without hidden subgroup failure", () => {
       const cohort = createHoldoutCohort();
       expect(cohort).toHaveLength(50);
 
       const report = runFullValidation(cohort);
+      expect(report.evidenceClass).toBe("synthetic_fixture");
       expect(report.totalCases).toBe(50);
       expect(report.independentSitesCount).toBe(3);
       expect(report.passedAllGates).toBe(true);
@@ -462,10 +462,11 @@ describe("Phase 3 Clinical Twin Validation Suite", () => {
     it("triggers validation run via API endpoint", async () => {
       app = await buildApp({ verifyPrincipal: verifier, environment: "test" });
       const res = await app.inject({
-        method: "POST", url: "/v1/imaging/validation/run", headers: headers("vet")
+        method: "POST", url: "/v1/imaging/validation/run", headers: headers("platform")
       });
       expect(res.statusCode).toBe(200);
       const report = res.json();
+      expect(report.evidenceClass).toBe("synthetic_fixture");
       expect(report.passedAllGates).toBe(true);
       expect(report.aggregateMetrics.overallTpaPassRatePct).toBeGreaterThanOrEqual(95.0);
     });

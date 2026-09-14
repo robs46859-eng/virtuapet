@@ -247,24 +247,25 @@ Stripe payment data stays within Stripe-hosted collection and the existing signe
 
 ## 19. Deployment architecture
 
-### 19.1 Target Azure platform
+### 19.1 Preferred Hostinger platform
 
-- Azure Front Door and Web Application Firewall at the public edge.
-- Azure API Management for API policy, versioning, quotas, and observability.
-- Azure Container Apps for APIs, Layer8, and workers.
-- Azure PostgreSQL, Managed Redis, Service Bus, Blob Storage, Key Vault, and Monitor.
-- Managed identities and private endpoints where supported.
-- Separate development, staging, and production subscriptions or resource boundaries.
+- Hostinger manages `virtuapet.com`, DNS, certificates, and the approved Vite web build.
+- The Fastify API runs as a separate Hostinger Node.js application at `api.virtuapet.com` where plan limits and workload tests allow it; compute-heavy imaging workers remain separate.
+- PostgreSQL 16 remains the canonical database. Because Hostinger managed web and cloud plans provide MySQL rather than hosted PostgreSQL, PostgreSQL runs on a dedicated Hostinger VPS or an approved external managed PostgreSQL service. MySQL is not a drop-in replacement for the existing migrations and repository.
+- Hostinger deployment environment variables hold non-public runtime configuration. Secrets are never committed or included in Vite browser variables.
+- A dedicated Hostinger VPS may host PostgreSQL and workers only with TLS, host firewall rules, encrypted backups, restore drills, patching, monitoring, and separate least-privilege accounts.
+- Development, staging, and production use separate applications, databases, credentials, storage, and domain names.
+- See `HOSTINGER_DEPLOYMENT_SPECIFICATION.md` for the deployment contract and remaining gates.
 
-### 19.2 Hostinger
+### 19.2 Optional specialized services
 
-Hostinger serves the approved VirtuaPet web build and manages the public domain boundary. It does not store unrestricted clinical images or database secrets. DNS, certificates, caching, deployment artifact hash, rollback, and environment configuration are recorded for each release.
+Azure services remain optional for workloads that require capabilities not established on Hostinger, including managed HSM/KMS signing, private object storage, queues, and regulated operational controls. No provider is considered production-ready until its exact configuration is deployed and verified.
 
 ## 20. Security requirements
 
 - Threat model every trust boundary and high-impact feature.
 - Encrypt in transit and at rest; use separate keys for restricted clinical assets.
-- Store secrets in Key Vault, never repositories or browser bundles.
+- Store secrets in the selected host's server-side environment controls or a managed secret/HSM service, never repositories or browser bundles.
 - Verify service identity and least privilege.
 - Scan dependencies, containers, IaC, secrets, and uploaded files.
 - Rate-limit by authenticated subject, tenant, route, and risk.
