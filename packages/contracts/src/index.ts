@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export * from "./imaging.js";
+
 export const uuidSchema = z.string().uuid();
 export const speciesSchema = z.enum(["dog", "cat", "bird", "reptile", "small_mammal", "other"]);
 
@@ -24,7 +26,10 @@ export const consentScopeSchema = z.enum([
   "pet.travel.read",
   "pet.location.current.read",
   "pet.twin.view",
-  "pet.health.observation.write"
+  "pet.health.observation.write",
+  "pet.imaging.read",
+  "pet.imaging.write",
+  "pet.imaging.rehearse"
 ]);
 
 export const createConsentGrantSchema = z.object({
@@ -141,8 +146,8 @@ export type ClinicMessage = z.infer<typeof clinicMessageSchema>;
 export const capabilities = [
   { id: "pet-profile", name: "Pet Profile", status: "phase_2_pilot" },
   { id: "vetos", name: "VetOS", status: "phase_2_pilot" },
-  { id: "clinical-twins", name: "Clinical Digital Twins", status: "research_and_validation" },
-  { id: "surgical-rehearsal", name: "Virtual Surgical Rehearsal", status: "research_and_validation" },
+  { id: "clinical-twins", name: "Clinical Digital Twins", status: "phase_3_validation" },
+  { id: "surgical-rehearsal", name: "Virtual Surgical Rehearsal", status: "phase_3_validation" },
   { id: "smart-vet-link", name: "Smart Global Vet Link", status: "phase_2_pilot" },
   { id: "feline-grimace", name: "Feline Grimace Scale Workflow", status: "phase_2_pilot" },
   { id: "robot", name: "Pet Assistant Robot", status: "discovery" },

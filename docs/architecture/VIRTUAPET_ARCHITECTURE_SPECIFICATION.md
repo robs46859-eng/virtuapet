@@ -6,7 +6,7 @@
 |---|---|
 | Document ID | VP-ARCH-001 |
 | Version | 1.0 |
-| Status | Target architecture with Phase 2 pilot implementation baseline |
+| Status | Target architecture with Phase 3 clinical twin validation baseline |
 | System | VirtuaPet commercial platform |
 | Owners | Architecture, security, product, clinical safety, and operations |
 
@@ -185,11 +185,31 @@ Every node records parent IDs, tool and model version, parameters, operator, tim
 
 Failure, rejection, or supersession can occur at defined transitions. Only `approved` models may be packaged for rehearsal. Any patient, laterality, unit, coordinate, or source mismatch is terminal until corrected through a new traceable version.
 
-### 12.4 Accuracy and effectiveness
+### 12.4 Intended Use Definition and Constraints
 
-The intended use defines the anatomy, modality, acquisition constraints, measurements, and acceptable error. Required metrics include patient/laterality match, spacing and orientation preservation, surface distance, landmark error, measurement error, topology defects, missing critical structures, clinician correction time, approval rate, rehearsal task completion, and usability.
+Phase 3 establishes the first validated clinical twin implementation for one narrow veterinary intended use:
+- **Species**: Canine (*Canis lupus familiaris*).
+- **Anatomy**: Stifle joint (distal femur, proximal tibia, patella, fibular head).
+- **Modality**: Contiguous helical computed tomography (CT) with slice thickness <= 1.5 mm, pixel spacing <= 0.75 mm x 0.75 mm, gantry tilt 0.0 degrees, standard bone kernel, and units in Hounsfield Units (HU).
+- **Procedure**: Pre-operative planning and virtual surgical rehearsal for Tibial Plateau Leveling Osteotomy (TPLO).
+- **Measurements**: Tibial Plateau Angle (TPA, target 5.0 deg +/- 1.0 deg), radial saw blade radius (18, 24, 27, 30, 33 mm), rotation chord distance (mm), and tibial tuberosity safe margin (>= 10.0 mm).
+- **Clinical Role Guard**: Only users holding the verified `veterinarian` role within the owning clinic organization may approve or reject clinical models. Vet staff and guardians cannot approve. Rehearsal sessions fail closed without explicit veterinary approval.
 
-Initial cross-cutting gates are documented in the phased plan. Procedure-specific gates may only become stricter. Dataset splits occur by patient and site. Performance is reported by species, breed/body size, scanner/site, acquisition protocol, and relevant pathology; aggregate performance alone cannot hide a failing subgroup.
+### 12.5 Quality Gates and No-Hidden-Subgroup Policy
+
+| Gate ID | Criterion | Threshold |
+|---|---|---|
+| **GATE-01** | Patient and Laterality Preservation | 100% preservation (0% mismatch) |
+| **GATE-02** | Units (HU) & Coordinate Frame (LPS) Preservation | 100% preservation |
+| **GATE-03** | Veterinarian Pre-Rehearsal Approval | 100% verified approval |
+| **GATE-04** | Linear Measurement Error | >= 95% within 1.5 mm or 2.5% |
+| **GATE-05** | Tibial Plateau Angle (TPA) Angular Error | >= 95% within 1.0 degree |
+| **GATE-06** | Critical Surface Distance (HD95) | HD95 <= 1.5 mm |
+| **GATE-07** | Dice Similarity Coefficient | Tibia >= 0.92, Femur >= 0.90, Patella >= 0.88 |
+| **GATE-08** | Watertight Manifold Topology | 100% watertight, 0 non-manifold edges |
+| **GATE-09** | Rehearsal Unassisted Task Completion | >= 90% unassisted completion |
+| **GATE-10** | System Usability Scale (SUS) | Median SUS >= 80 / 100 |
+| **GATE-11** | Subgroup Equivalence | Zero failing subgroups across body size, scanner, protocol, or pathology |
 
 ## 13. Spatial asset architecture
 

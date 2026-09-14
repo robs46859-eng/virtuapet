@@ -14,11 +14,12 @@ import {
 } from "@virtuapet/contracts";
 import { verifierFromEnvironment, type Principal, type PrincipalVerifier } from "./auth.js";
 import { MemoryPetRepository, type PetRepository } from "./repository.js";
+import { registerImagingRoutes } from "./imaging/routes.js";
 
 declare module "fastify" { interface FastifyRequest { principal?: Principal } }
 
 export interface AppOptions { environment?: string; repository?: PetRepository; verifyPrincipal?: PrincipalVerifier; }
-const protectedPrefixes = ["/v1/pets", "/v1/regulations", "/v1/organizations"];
+const protectedPrefixes = ["/v1/pets", "/v1/regulations", "/v1/organizations", "/v1/imaging"];
 
 async function ownedPet(repository: PetRepository, petId: string, principal: Principal) {
   const pet = await repository.findById(petId);
@@ -43,7 +44,7 @@ export async function buildApp(options: AppOptions = {}) {
   await app.register(helmet);
   await app.register(cors, { origin: environment === "development" });
 
-  app.get("/healthz", async () => ({ status: "ok", service: "virtuapet-api", version: "0.2.0" }));
+  app.get("/healthz", async () => ({ status: "ok", service: "virtuapet-api", version: "0.3.0" }));
   app.get("/readyz", async (_request, reply) => {
     const oidcReady = Boolean(process.env.OIDC_ISSUER && process.env.OIDC_AUDIENCE && process.env.OIDC_JWKS_URL);
     const devReady = environment === "development" && Boolean(process.env.DEV_API_TOKEN);
@@ -163,5 +164,6 @@ export async function buildApp(options: AppOptions = {}) {
   app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/inventory",async(request,reply)=>{ const principal=request.principal!; const member=await repository.findMembership(request.params.organizationId,principal.userId); if(!member||!["clinic_admin","vet_staff","veterinarian"].includes(member.role))return reply.code(403).send({error:"clinic_membership_required"}); const parsed=createInventoryItemSchema.safeParse(request.body); if(!parsed.success)return reply.code(400).send({error:"invalid_inventory",issues:parsed.error.issues}); const item:InventoryItem=inventoryItemSchema.parse({...parsed.data,inventoryItemId:randomUUID(),clinicId:request.params.organizationId,updatedByUserId:principal.userId,updatedAt:new Date().toISOString()}); return reply.code(201).send(await repository.createInventoryItem(item)); });
   app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/messages",async(request,reply)=>{ const principal=request.principal!; const member=await repository.findMembership(request.params.organizationId,principal.userId); if(!member)return reply.code(403).send({error:"clinic_membership_required"}); const parsed=createClinicMessageSchema.safeParse(request.body); if(!parsed.success)return reply.code(400).send({error:"invalid_message",issues:parsed.error.issues}); if(!await hasActiveClinicGrant(repository,parsed.data.petId,{...principal,organizationId:request.params.organizationId},"pet.profile.read"))return reply.code(403).send({error:"active_consent_required"}); const item:ClinicMessage=clinicMessageSchema.parse({...parsed.data,messageId:randomUUID(),clinicId:request.params.organizationId,authorUserId:principal.userId,createdAt:new Date().toISOString()}); return reply.code(201).send(await repository.createClinicMessage(item)); });
 
+  await registerImagingRoutes(app, repository);
   return app;
 }
