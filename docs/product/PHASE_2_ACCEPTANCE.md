@@ -12,8 +12,8 @@ The first Phase 2 consumer and clinic pilot slice is implemented and locally tes
 | Development identity | Explicitly restricted to development environment | Implemented |
 | Pet Profile | Guardian-bound create and read | Tested |
 | Consent | Clinic scopes, purpose, start, expiry, list, and revocation | Tested with memory repository |
-| Persistent schema | Pet, consent, FGS, regulation evidence, and outbox tables | Local PostgreSQL migration passed; CI verification configured |
-| Persistent adapter | Parameterized PostgreSQL operations | Pet, consent, revocation, and FGS round trips passed locally; CI verification configured |
+| Persistent schema | Pet, consent, FGS, regulation evidence, and outbox tables | Local migration and CI run 34842844275 passed |
+| Persistent adapter | Parameterized PostgreSQL operations | Pet, consent, revocation, and FGS round trips passed locally and in CI |
 | Manual FGS | Five action units, trained-assessor confirmation, total, 4-of-10 review prompt | Tested |
 | Clinic access | Veterinary role and active write consent required | Tested |
 | Regulation evidence | Reviewer-only source record and unsupported fail-closed result | Tested |
