@@ -2,12 +2,16 @@
 
 VirtuaPet is a shared pet-care platform for households, veterinary offices, caregivers, travel partners, and interactive 3D experiences. This repository starts with the safety and data foundation needed by every later product.
 
-## Phase 1 status
+## Phase 2 status
 
-Phase 1 foundation is implemented as a development baseline:
+Phase 1 is complete as a development baseline. Phase 2 now includes an initial clinic and consumer pilot slice:
 
 - canonical pet and consent contracts;
-- protected pet-profile API with owner-bound access;
+- OIDC verification support and protected pet-profile API with owner-bound access;
+- time-limited clinic consent creation, listing, and revocation;
+- PostgreSQL migration and persistent repository adapter;
+- manual Feline Grimace Scale recording with trained-assessor, clinic-role, and active-consent gates;
+- source-backed regulation evidence records that fail closed when unsupported;
 - health and readiness endpoints;
 - capability registry with honest release labels;
 - first responsive dashboard shell;
@@ -23,6 +27,8 @@ This is not a production deployment, clinical device, autonomous robot, transpor
 3. Run `npm install`.
 4. Run `npm test`.
 5. Run `npm run dev`.
+
+To use PostgreSQL, start the local services, set `DATABASE_URL`, run `npm run migrate`, build the workspace, and run `node scripts/verify-postgres.mjs` before starting the API.
 
 The API starts at `http://127.0.0.1:8080`. Open `apps/web/index.html` for the dashboard shell.
 

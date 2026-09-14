@@ -2,7 +2,7 @@
 
 ## Current state
 
-The repository contains the Phase 1 development foundation. Shared contracts, a protected in-memory API, a responsive dashboard shell, tests, CI, architecture, threat model, and phased plan are present.
+The repository contains the completed Phase 1 development foundation and the first Phase 2 pilot slice. It adds OIDC verification support, PostgreSQL persistence, consent revocation, permission-gated manual Feline Grimace Scale assessments, regulation evidence records, and an updated dashboard.
 
 ## Run and verify
 
@@ -15,15 +15,14 @@ The repository contains the Phase 1 development foundation. Shared contracts, a 
 
 ## Next implementation order
 
-1. Verified Clerk or OIDC adapter with server-side organization membership.
-2. PostgreSQL migrations, repositories, transaction boundaries, and row isolation.
-3. Consent create, list, revoke, expiry, and authorization enforcement.
-4. Transactional outbox and Azure Service Bus adapter.
-5. Layer8 signed policy-decision integration.
-6. Authenticated household dashboard with real empty states.
-7. Azure development deployment and Hostinger preview release.
+1. Map OIDC organization claims to server-owned clinic membership records rather than accepting provider claims as final authority.
+2. Add PostgreSQL integration tests, row-level security, transactional outbox writes, migration ledger, and backup/restore evidence.
+3. Add household invitations, clinic organizations, scheduling, communications, recall, and inventory pilot workflows.
+4. Add human verification and supersession endpoints for regulation evidence.
+5. Add Layer8 signed policy-decision and Azure Service Bus adapters.
+6. Add authenticated dashboard workflows, accessibility tests, and design-partner telemetry.
+7. Deploy an Azure development environment and Hostinger preview.
 
 ## Do not mistake for complete
 
-The memory repository is local development storage. The user identity header is not production authentication. Capability cards are product-state labels, not active services. Clinical twins, FGS, regulation automation, robotics, fleet operations, drones, payments, PIMS, PACS, and production deployment remain unverified.
-
+The memory repository remains the automated-test default. The PostgreSQL migration and repository round trips passed against a temporary local PostgreSQL instance, but Azure PostgreSQL, backup, restore, concurrency, and row-level security remain unverified. OIDC code exists but no live provider has been configured. FGS is a manual workflow, not automated pain diagnosis. Regulation evidence does not yet automate jurisdiction resolution. Clinical twins, robotics, fleet operations, drones, payments, PIMS, PACS, and production deployment remain unverified.

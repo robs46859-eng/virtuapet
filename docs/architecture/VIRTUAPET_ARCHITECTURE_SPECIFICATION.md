@@ -6,7 +6,7 @@
 |---|---|
 | Document ID | VP-ARCH-001 |
 | Version | 1.0 |
-| Status | Target architecture with Phase 1 implementation baseline |
+| Status | Target architecture with Phase 2 pilot implementation baseline |
 | System | VirtuaPet commercial platform |
 | Owners | Architecture, security, product, clinical safety, and operations |
 
@@ -14,7 +14,7 @@
 
 This specification defines the complete VirtuaPet platform and the boundaries required to build it safely. It preserves the dashboard as the common entry point while allowing each service to own its data and release independently.
 
-Phase 1 implements contracts, a protected development API, a dashboard shell, health/readiness separation, tests, and build automation. Sections labeled target describe later work and are not claims of deployed capability.
+Phase 1 implements contracts, a protected development API, a dashboard shell, health/readiness separation, tests, and build automation. The first Phase 2 slice adds OIDC verification, PostgreSQL persistence, consent lifecycle endpoints, manual FGS recording, and regulation evidence. Sections labeled target describe later work and are not claims of deployed capability.
 
 ## 2. Architecture principles
 
@@ -289,19 +289,21 @@ Alerts identify owner, severity, customer impact, runbook, and escalation. Analy
 - Releases are immutable and promoted by digest.
 - `HANDOFF.md` is updated with each material implementation milestone.
 
-## 25. Phase 1 implementation mapping
+## 25. Phase 2 implementation mapping
 
 | Requirement | Current implementation | Next production step |
 |---|---|---|
-| Pet contract | `packages/contracts` | Persistence migrations and compatibility policy |
-| Consent contract | `packages/contracts` | Consent API, revocation, cache invalidation |
+| Pet contract | `packages/contracts` and pet API | Compatibility policy and production database verification |
+| Consent contract | Contract plus create, list, and revoke endpoints | Cache invalidation and durable audit outbox |
 | Event envelope | `packages/contracts` | Transactional outbox and Service Bus |
-| API boundary | `apps/api` | OIDC, organization resolution, PostgreSQL |
-| Dashboard | `apps/web` | Authenticated data and accessibility suite |
+| API boundary | OIDC verifier plus development-only fallback | Server-owned organization membership and Layer8 decisions |
+| PostgreSQL | Migration and repository adapter | Integration, RLS, backup, restore, and Azure verification |
+| Manual FGS | Trained assessor, role, active consent, total, review prompt | Veterinary content approval and pilot evidence |
+| Rules evidence | Reviewer-only evidence and unsupported fail-closed response | Address resolution, adapters, verification, supersession |
+| Dashboard | `apps/web` Phase 2 pilot shell | Authenticated data and accessibility suite |
 | Honest status | Capability registry | Admin-controlled release registry |
 | Testing | Contract and API suites | Integration, security, browser, recovery tests |
 
 ## 26. Architecture acceptance
 
 The architecture is accepted for implementation when product, security, clinical, operations, and engineering owners approve the boundaries; every proposed feature has an owner and evidence gate; and Phase 1 production gaps are scheduled. Approval does not certify a clinical device, transport operator, aircraft operation, or autonomous robot.
-
