@@ -35,8 +35,9 @@ This decision does not claim commercial launch, clinical validation, production 
 | Clinic communications | Clinic membership, pet consent, author, and timestamp | Accepted and tested |
 | Regulation evidence | Reviewer-only creation, provenance, status, and verification endpoint | Accepted and tested |
 | Regulation fail-closed behavior | Unsupported and unverified states are explicit | Accepted and tested |
-| PostgreSQL | Two migrations and persistent round trips for Phase 2 domains | Accepted locally; CI required on final commit |
+| PostgreSQL | Two migrations and persistent round trips for Phase 2 domains | Accepted locally and in CI run 34844092124 |
 | Dashboard | Phase 2 labels and human-review warnings | Accepted by local visual inspection |
+| Build quality | Type checks, 13 tests, builds, dependency audit, and PostgreSQL CI | Accepted in CI run 34844092124 |
 
 ## Required closeout scenarios
 
