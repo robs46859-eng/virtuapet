@@ -2,23 +2,25 @@
 
 VirtuaPet is a shared pet-care platform for households, veterinary offices, caregivers, travel partners, and interactive 3D experiences. This repository starts with the safety and data foundation needed by every later product.
 
-## Phase 2 status
+## Current status
 
-Phase 1 is complete as a development baseline. Phase 2 now includes an initial clinic and consumer pilot slice:
+Phase 1 and the Phase 2 engineering pilot are code-complete. The repository now includes:
 
 - canonical pet and consent contracts;
 - OIDC verification support and protected pet-profile API with owner-bound access;
 - time-limited clinic consent creation, listing, and revocation;
+- server-owned clinic organizations, administrators, and staff memberships;
 - PostgreSQL migration and persistent repository adapter;
 - manual Feline Grimace Scale recording with trained-assessor, clinic-role, and active-consent gates;
-- source-backed regulation evidence records that fail closed when unsupported;
+- appointments, recalls, inventory foundations, and consent-controlled clinic messages;
+- source-backed regulation evidence creation, human verification, and fail-closed results;
 - health and readiness endpoints;
 - capability registry with honest release labels;
 - first responsive dashboard shell;
 - architecture, threat model, phased plan, and decision records;
 - automated contract and API tests.
 
-This is not a production deployment, clinical device, autonomous robot, transport service, or regulatory advice system. Those capabilities remain gated in the development plan.
+Phase 2 is accepted at the code-complete engineering level. Live identity, design-partner, veterinary-owner, privacy, accessibility, Azure, Hostinger, backup, and recovery evidence remains external acceptance work. This is not a production deployment, clinical device, autonomous robot, transport service, or regulatory advice system.
 
 ## Run locally
 
@@ -34,7 +36,7 @@ The API starts at `http://127.0.0.1:8080`. Open `apps/web/index.html` for the da
 
 ## Repository map
 
-- `apps/api` - Phase 1 HTTP API.
+- `apps/api` - Phase 1 and Phase 2 HTTP API and persistence adapters.
 - `apps/web` - dashboard shell preserving the product-module layout.
 - `packages/contracts` - shared schemas, permissions, events, and identifiers.
 - `docs/architecture` - full target architecture and decision records.
@@ -46,4 +48,6 @@ The API starts at `http://127.0.0.1:8080`. Open `apps/web/index.html` for the da
 - [Phased development plan](docs/product/PHASED_DEVELOPMENT_PLAN.md)
 - [Full architecture specification](docs/architecture/VIRTUAPET_ARCHITECTURE_SPECIFICATION.md)
 - [Phase 1 acceptance report](docs/product/PHASE_1_ACCEPTANCE.md)
+- [Phase 2 engineering closeout](docs/product/PHASE_2_ACCEPTANCE.md)
+- [Phase 3 implementation prompt](docs/product/PHASE_3_IMPLEMENTATION_PROMPT.md)
 - [Engineering handoff](HANDOFF.md)

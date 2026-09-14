@@ -71,6 +71,20 @@ export const organizationRoleSchema = z.enum([
   "guardian", "caregiver", "vet_staff", "veterinarian", "clinic_admin", "regulatory_reviewer", "platform_admin"
 ]);
 
+export const createOrganizationSchema = z.object({ name: z.string().trim().min(2).max(160), kind: z.enum(["clinic", "household", "travel_partner"]) }).strict();
+export const organizationSchema = createOrganizationSchema.extend({ organizationId: uuidSchema, createdAt: z.string().datetime() }).strict();
+export const createMembershipSchema = z.object({ userId: uuidSchema, role: organizationRoleSchema }).strict();
+export const membershipSchema = createMembershipSchema.extend({ membershipId: uuidSchema, organizationId: uuidSchema, status: z.enum(["active", "revoked"]), createdAt: z.string().datetime(), revokedAt: z.string().datetime().nullable() }).strict();
+
+export const createAppointmentSchema = z.object({ petId: uuidSchema, startsAt: z.string().datetime(), durationMinutes: z.number().int().min(10).max(480), reason: z.string().trim().min(2).max(300), assignedUserId: uuidSchema.optional() }).strict();
+export const appointmentSchema = createAppointmentSchema.extend({ appointmentId: uuidSchema, clinicId: uuidSchema, status: z.enum(["scheduled", "confirmed", "completed", "cancelled"]), createdByUserId: uuidSchema, createdAt: z.string().datetime() }).strict();
+export const createRecallSchema = z.object({ petId: uuidSchema, dueAt: z.string().datetime(), reason: z.string().trim().min(2).max(300) }).strict();
+export const recallSchema = createRecallSchema.extend({ recallId: uuidSchema, clinicId: uuidSchema, status: z.enum(["open", "completed", "cancelled"]), createdByUserId: uuidSchema, createdAt: z.string().datetime() }).strict();
+export const createInventoryItemSchema = z.object({ sku: z.string().trim().min(1).max(80), name: z.string().trim().min(2).max(160), quantityOnHand: z.number().int().min(0), reorderPoint: z.number().int().min(0) }).strict();
+export const inventoryItemSchema = createInventoryItemSchema.extend({ inventoryItemId: uuidSchema, clinicId: uuidSchema, updatedByUserId: uuidSchema, updatedAt: z.string().datetime() }).strict();
+export const createClinicMessageSchema = z.object({ petId: uuidSchema, subject: z.string().trim().min(2).max(160), body: z.string().trim().min(2).max(4000) }).strict();
+export const clinicMessageSchema = createClinicMessageSchema.extend({ messageId: uuidSchema, clinicId: uuidSchema, authorUserId: uuidSchema, createdAt: z.string().datetime() }).strict();
+
 const grimaceActionUnitSchema = z.number().int().min(0).max(2);
 export const createFelineGrimaceAssessmentSchema = z.object({
   petId: uuidSchema,
@@ -117,6 +131,12 @@ export const regulationEvidenceSchema = createRegulationEvidenceSchema.extend({
 export type CreateConsentGrant = z.infer<typeof createConsentGrantSchema>;
 export type FelineGrimaceAssessment = z.infer<typeof felineGrimaceAssessmentSchema>;
 export type RegulationEvidence = z.infer<typeof regulationEvidenceSchema>;
+export type Organization = z.infer<typeof organizationSchema>;
+export type Membership = z.infer<typeof membershipSchema>;
+export type Appointment = z.infer<typeof appointmentSchema>;
+export type Recall = z.infer<typeof recallSchema>;
+export type InventoryItem = z.infer<typeof inventoryItemSchema>;
+export type ClinicMessage = z.infer<typeof clinicMessageSchema>;
 
 export const capabilities = [
   { id: "pet-profile", name: "Pet Profile", status: "phase_2_pilot" },

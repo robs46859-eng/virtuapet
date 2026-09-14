@@ -1,38 +1,77 @@
-# VirtuaPet Phase 2 Pilot Acceptance Report
+# VirtuaPet Phase 2 Engineering Closeout and Acceptance
 
-## Status
+## Closeout decision
 
-The first Phase 2 consumer and clinic pilot slice is implemented and locally testable. Phase 2 is not commercially or clinically complete because design-partner, production identity, persistent-database, privacy, accessibility, and live deployment evidence remain outstanding.
+Phase 2 is code-complete and accepted as an engineering pilot release. Phase 3 may begin from this baseline.
 
-## Implemented slice
+This decision does not claim commercial launch, clinical validation, production deployment, or design-partner acceptance. Those require people, credentials, environments, and evidence outside this repository. They remain operational gates and must not be reported as complete.
 
-| Capability | Evidence | Status |
+## Release identification
+
+| Field | Value |
+|---|---|
+| Document ID | VP-ACCEPT-002 |
+| Release | Phase 2 clinic and consumer engineering pilot |
+| Repository | robs46859-eng/virtuapet |
+| Acceptance level | Code-complete engineering release |
+| Production authorization | Not granted |
+| Clinical-use authorization | Not granted |
+
+## Accepted capabilities
+
+| Capability | Acceptance evidence | Result |
 |---|---|---|
-| Verified identity adapter | OIDC issuer, audience, signature, and JWKS verification | Implemented; live provider not configured |
-| Development identity | Explicitly restricted to development environment | Implemented |
-| Pet Profile | Guardian-bound create and read | Tested |
-| Consent | Clinic scopes, purpose, start, expiry, list, and revocation | Tested with memory repository |
-| Persistent schema | Pet, consent, FGS, regulation evidence, and outbox tables | Local migration and CI run 34842844275 passed |
-| Persistent adapter | Parameterized PostgreSQL operations | Pet, consent, revocation, and FGS round trips passed locally and in CI |
-| Manual FGS | Five action units, trained-assessor confirmation, total, 4-of-10 review prompt | Tested |
-| Clinic access | Veterinary role and active write consent required | Tested |
-| Regulation evidence | Reviewer-only source record and unsupported fail-closed result | Tested |
-| Dashboard | Phase 2 statuses and human-review notice | Implemented |
+| OIDC identity | JWT signature, issuer, audience, and JWKS verification adapter | Accepted in code; live configuration deferred |
+| Development identity | Works only when environment is explicitly development | Accepted |
+| Server-owned clinic authority | Clinic roles resolve from VirtuaPet membership records | Accepted and tested |
+| Organizations and membership | Organization creation, administrator bootstrap, staff membership | Accepted and tested |
+| Pet Profile | Strict schema, guardian-bound create and read, non-disclosing cross-user denial | Accepted and tested |
+| Consent | Enumerated scopes, purpose, start, expiry, active evaluation, list, and revocation | Accepted and tested |
+| Manual FGS | Five action units, trained-human confirmation, total score, 4-of-10 review prompt | Accepted and tested |
+| FGS clinic control | Server-owned veterinary role plus active write consent | Accepted and tested |
+| Appointments | Clinic-member creation and listing with active Pet Profile consent | Accepted and tested |
+| Recalls | Clinic-member creation with accountable author | Accepted and tested |
+| Inventory | Validated nonnegative quantities and clinic ownership | Accepted and tested |
+| Clinic communications | Clinic membership, pet consent, author, and timestamp | Accepted and tested |
+| Regulation evidence | Reviewer-only creation, provenance, status, and verification endpoint | Accepted and tested |
+| Regulation fail-closed behavior | Unsupported and unverified states are explicit | Accepted and tested |
+| PostgreSQL | Two migrations and persistent round trips for Phase 2 domains | Accepted locally; CI required on final commit |
+| Dashboard | Phase 2 labels and human-review warnings | Accepted by local visual inspection |
 
-## Safety and claim boundaries
+## Required closeout scenarios
 
-- FGS values are observations entered by a trained human. No camera model or diagnosis is present.
-- A total score of four or more creates a veterinary-review prompt; it does not prescribe treatment.
-- Regulation evidence is not a final compliance answer. Results remain drafts until human verification.
-- OIDC organization claims must be mapped to server-owned memberships before production clinic authorization.
-- No real household, clinic, patient, DICOM, location, payment, or nonprofit data is authorized in the current environment.
+- Anonymous protected requests are rejected.
+- Another user cannot discover or read a pet.
+- Consent can be granted and revoked.
+- Revoked or expired consent cannot authorize clinic work.
+- Identity-provider roles do not replace server-owned clinic membership.
+- FGS requires eligible membership and active scope.
+- FGS total four triggers review without prescribing treatment.
+- Unsupported regulation queries fail closed.
+- Only reviewer roles create or verify regulation evidence.
+- Clinic appointments and messages require membership and pet consent.
+- PostgreSQL round trips cover the accepted Phase 2 records.
 
-## Remaining Phase 2 exit evidence
+## Deferred external acceptance
 
-- Three design-partner clinics complete defined workflows.
-- Privacy and security owners approve the production identity and consent flows.
-- PostgreSQL rollback, concurrency, row isolation, backup, restore, and Azure-hosted tests pass. The initial local migration and repository round trips have passed.
-- Manual FGS content and workflow receive veterinary-owner approval.
-- Regulation adapters use approved authoritative sources and record freshness, conflict, and human-verification states.
-- Authenticated web workflows pass keyboard, screen-reader, mobile, and supported-browser testing.
-- Azure development and Hostinger preview deployments pass health, readiness, rollback, secrets, logs, and alert checks.
+These items cannot be honestly completed without external participation:
+
+1. Configure the selected live OIDC or Clerk tenant.
+2. Complete privacy and security-owner review.
+3. Obtain veterinary-owner approval of the manual FGS content and workflow.
+4. Run representative workflows with at least three design-partner clinics.
+5. Implement approved government-source adapters and verify jurisdiction coverage.
+6. Complete authenticated keyboard, screen-reader, mobile, and browser studies.
+7. Deploy to Azure and Hostinger and verify secrets, alerts, backup, restore, rollback, and recovery.
+8. Measure onboarding, support cost, activation, weekly use, satisfaction, and conversion.
+
+## Safety boundaries
+
+- FGS is a human-entered observation workflow, not an automated diagnosis.
+- Regulation evidence is informational until human verified and never replaces the relevant authority.
+- No clinical twin or surgical-rehearsal output is authorized in Phase 2.
+- No production, customer, DICOM, precise-location, payment-card, or SugarDaddy.lgbt eligibility data is authorized in the development environment.
+
+## Phase 3 entry decision
+
+Phase 3 may build the isolated clinical-imaging validation system against this foundation. It must not weaken Pet Profile ownership, consent, server-owned membership, provenance, or fail-closed behavior.

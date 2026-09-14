@@ -1,0 +1,10 @@
+BEGIN;
+CREATE TABLE organizations (organization_id uuid PRIMARY KEY, name text NOT NULL, kind text NOT NULL CHECK (kind IN ('clinic','household','travel_partner')), created_at timestamptz NOT NULL);
+CREATE TABLE organization_memberships (membership_id uuid PRIMARY KEY, organization_id uuid NOT NULL REFERENCES organizations(organization_id), user_id uuid NOT NULL, role text NOT NULL, status text NOT NULL CHECK (status IN ('active','revoked')), created_at timestamptz NOT NULL, revoked_at timestamptz, UNIQUE (organization_id,user_id));
+CREATE INDEX memberships_user_idx ON organization_memberships(user_id,organization_id) WHERE status='active';
+CREATE TABLE appointments (appointment_id uuid PRIMARY KEY, clinic_id uuid NOT NULL REFERENCES organizations(organization_id), pet_id uuid NOT NULL REFERENCES pet_profiles(pet_id), starts_at timestamptz NOT NULL, duration_minutes integer NOT NULL CHECK(duration_minutes BETWEEN 10 AND 480), reason text NOT NULL, assigned_user_id uuid, status text NOT NULL, created_by_user_id uuid NOT NULL, created_at timestamptz NOT NULL);
+CREATE INDEX appointments_clinic_time_idx ON appointments(clinic_id,starts_at);
+CREATE TABLE recalls (recall_id uuid PRIMARY KEY, clinic_id uuid NOT NULL REFERENCES organizations(organization_id), pet_id uuid NOT NULL REFERENCES pet_profiles(pet_id), due_at timestamptz NOT NULL, reason text NOT NULL, status text NOT NULL, created_by_user_id uuid NOT NULL, created_at timestamptz NOT NULL);
+CREATE TABLE inventory_items (inventory_item_id uuid PRIMARY KEY, clinic_id uuid NOT NULL REFERENCES organizations(organization_id), sku text NOT NULL, name text NOT NULL, quantity_on_hand integer NOT NULL CHECK(quantity_on_hand>=0), reorder_point integer NOT NULL CHECK(reorder_point>=0), updated_by_user_id uuid NOT NULL, updated_at timestamptz NOT NULL, UNIQUE(clinic_id,sku));
+CREATE TABLE clinic_messages (message_id uuid PRIMARY KEY, clinic_id uuid NOT NULL REFERENCES organizations(organization_id), pet_id uuid NOT NULL REFERENCES pet_profiles(pet_id), subject text NOT NULL, body text NOT NULL, author_user_id uuid NOT NULL, created_at timestamptz NOT NULL);
+COMMIT;

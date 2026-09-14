@@ -1,28 +1,52 @@
 # VirtuaPet Engineering Handoff
 
-## Current state
+## Current release
 
-The repository contains the completed Phase 1 development foundation and the first Phase 2 pilot slice. It adds OIDC verification support, PostgreSQL persistence, consent revocation, permission-gated manual Feline Grimace Scale assessments, regulation evidence records, and an updated dashboard.
+Phase 1 and the Phase 2 engineering pilot are code-complete. Phase 2 provides OIDC verification support, server-owned clinic memberships, PostgreSQL persistence, Pet Profile and consent workflows, manual Feline Grimace Scale observations, appointments, recalls, inventory, clinic messages, regulation evidence review, CI, and the Phase 2 dashboard.
 
-## Run and verify
+The authoritative closeout is `docs/product/PHASE_2_ACCEPTANCE.md`. It separates completed engineering evidence from outstanding operational and clinical approvals.
 
-1. Copy `.env.example` to `.env` and set a long local development token.
-2. Run `npm install`.
-3. Run `npm run typecheck`.
-4. Run `npm test`.
-5. Run `npm run build`.
-6. Start the API and web development servers in separate terminals.
+## Reproduce the accepted build
 
-## Next implementation order
+1. Install Node.js 22.12 or newer and run `npm ci`.
+2. Run `npm run typecheck`, `npm test`, and `npm run build`.
+3. Start a fresh PostgreSQL 16 database.
+4. Set `DATABASE_URL` and run `npm run migrate`.
+5. Run `node scripts/verify-postgres.mjs` with the same connection string.
+6. Run `npm audit --audit-level=high`.
 
-1. Map OIDC organization claims to server-owned clinic membership records rather than accepting provider claims as final authority.
-2. Add PostgreSQL integration tests, row-level security, transactional outbox writes, migration ledger, and backup/restore evidence.
-3. Add household invitations, clinic organizations, scheduling, communications, recall, and inventory pilot workflows.
-4. Add human verification and supersession endpoints for regulation evidence.
-5. Add Layer8 signed policy-decision and Azure Service Bus adapters.
-6. Add authenticated dashboard workflows, accessibility tests, and design-partner telemetry.
-7. Deploy an Azure development environment and Hostinger preview.
+## Phase 3 clinical twin validation
 
-## Do not mistake for complete
+Build a separate imaging service for veterinary DICOM ingestion, de-identification, series validation, volume reconstruction, segmentation, clinician correction, mesh generation, quantitative QA, signed model packaging, and source-linked rehearsal delivery.
 
-The memory repository remains the automated-test default. The PostgreSQL migration and repository round trips passed against a temporary local PostgreSQL instance, but Azure PostgreSQL, backup, restore, concurrency, and row-level security remain unverified. OIDC code exists but no live provider has been configured. FGS is a manual workflow, not automated pain diagnosis. Regulation evidence does not yet automate jurisdiction resolution. Clinical twins, robotics, fleet operations, drones, payments, PIMS, PACS, and production deployment remain unverified.
+First approve one narrow veterinary intended use, anatomy, species, modality, and procedure. Then approve dataset governance and a validation protocol with a veterinary clinical owner. Implement immutable Study, Series, Volume, Segmentation, Mesh, Clinical Model, Plan, Rehearsal, and Approval contracts; quarantine and integrity controls; isolated workers and storage; provenance and versioning; clinician correction and approval; signed GibiWorld manifests; and procedure-specific holdout evaluation.
+
+Phase 3 cannot close on synthetic smoke tests alone. It requires veterinarian approval, independent holdout results, complete traceability, and zero patient or laterality mismatches.
+
+## Phase 4 spatial and mobility pilots
+
+- Add GibiWorld rehearsal for approved clinical derivatives.
+- Validate scale, axes, laterality, entitlement, rollback, and device compatibility.
+- Build the low, stable pet-assistant robot alpha with local safety control.
+- Pilot partner ground-travel corridors and custody evidence.
+- Restrict drones to permitted property and exclude live-animal drone transport.
+
+## Phase 5 commercial scale
+
+- Package validated VetOS and rehearsal tiers.
+- Scale only after retention, margin, implementation, safety, support, privacy, and recovery gates pass.
+- Expand robot manufacturing and travel only after unit economics and operational evidence pass.
+- Keep AR, mixed-reality, stereoscopic, light-field, and holographic claims technically accurate.
+
+## Cross-phase operational work
+
+- Configure live identity and membership synchronization.
+- Integrate Layer8 signed decisions, Stripe entitlements, API management, audit, and human escalation.
+- Deploy Azure development, staging, and production boundaries.
+- Publish verified Hostinger artifacts with rollback.
+- Add Service Bus publication, RLS, backup, restore, recovery, security, and accessibility evidence.
+- Maintain the independent SugarDaddy.lgbt governance and data boundary.
+
+## Prohibited unsupported claims
+
+Do not claim production deployment, live customers, clinical accuracy, regulatory compliance, autonomous diagnosis, device safety, robot readiness, travel operations, drone certification, profitability, or design-partner acceptance without fresh evidence for that exact claim.
