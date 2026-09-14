@@ -59,6 +59,7 @@ The API starts at `http://127.0.0.1:8080`. Run the web workspace development com
 
 - [Phased development plan](docs/product/PHASED_DEVELOPMENT_PLAN.md)
 - [Full architecture specification](docs/architecture/VIRTUAPET_ARCHITECTURE_SPECIFICATION.md)
+- [Azure backend deployment](docs/architecture/AZURE_BACKEND_DEPLOYMENT.md)
 - [Phase 1 acceptance report](docs/product/PHASE_1_ACCEPTANCE.md)
 - [Phase 2 engineering closeout](docs/product/PHASE_2_ACCEPTANCE.md)
 - [Phase 3 intended use specification](docs/product/PHASE_3_INTENDED_USE.md)

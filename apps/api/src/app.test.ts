@@ -42,6 +42,20 @@ describe("VirtuaPet Phase 2 API", () => {
     expect((await app.inject({ method: "GET", url: "/readyz" })).json().dependencies.identityVerifier).toBe("injected");
   });
 
+  it("fails readiness closed when the repository is unavailable", async () => {
+    const { MemoryPetRepository } = await import("./repository.js");
+    const repository = new MemoryPetRepository();
+    repository.checkHealth = async () => { throw new Error("unavailable"); };
+    app = await buildApp({ repository, verifyPrincipal: verifier, environment: "test" });
+    const response = await app.inject({ method: "GET", url: "/readyz" });
+    expect(response.statusCode).toBe(503);
+    expect(response.json()).toMatchObject({ status: "not_ready", missing: ["database"] });
+  });
+
+  it("requires an explicit browser origin in production", async () => {
+    await expect(buildApp({ verifyPrincipal: verifier, environment: "production", publicApiBaseUrl: "https://api.virtuapet.com", clinicalSigningKey: "test-only-clinical-signing-key-32-bytes" })).rejects.toThrow("CORS_ALLOWED_ORIGINS");
+  });
+
   it("protects profile access and hides another guardian's pet", async () => {
     app = await buildApp({ verifyPrincipal: verifier, environment: "test" });
     expect((await app.inject({ method: "POST", url: "/v1/pets", payload: { name: "Milo", species: "cat" } })).statusCode).toBe(401);

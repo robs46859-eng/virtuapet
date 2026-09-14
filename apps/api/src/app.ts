@@ -24,6 +24,7 @@ export interface AppOptions {
   verifyPrincipal?: PrincipalVerifier;
   clinicalSigningKey?: string;
   publicApiBaseUrl?: string;
+  corsAllowedOrigins?: string[];
 }
 const protectedPrefixes = ["/v1/pets", "/v1/regulations", "/v1/organizations", "/v1/imaging"];
 
@@ -50,16 +51,24 @@ export async function buildApp(options: AppOptions = {}) {
   if (!clinicalSigningKey) throw new Error("CLINICAL_TWIN_SIGNING_KEY is required outside tests");
   const publicApiBaseUrl = options.publicApiBaseUrl ?? process.env.PUBLIC_API_BASE_URL ?? (environment === "production" ? undefined : "http://127.0.0.1:8080");
   if (!publicApiBaseUrl) throw new Error("PUBLIC_API_BASE_URL is required in production");
+  const corsAllowedOrigins = options.corsAllowedOrigins ?? (process.env.CORS_ALLOWED_ORIGINS ?? "").split(",").map(value => value.trim()).filter(Boolean);
+  if (environment === "production" && corsAllowedOrigins.length === 0) throw new Error("CORS_ALLOWED_ORIGINS is required in production");
   const app = Fastify({ logger: environment !== "test", genReqId: () => randomUUID() });
   await app.register(helmet);
-  await app.register(cors, { origin: environment === "development" });
+  await app.register(cors, { origin: environment === "development" ? true : corsAllowedOrigins });
+  app.addHook("onClose", async () => repository.close());
 
   app.get("/healthz", async () => ({ status: "ok", service: "virtuapet-api", version: "0.3.0" }));
   app.get("/readyz", async (_request, reply) => {
     const oidcReady = Boolean(process.env.OIDC_ISSUER && process.env.OIDC_AUDIENCE && process.env.OIDC_JWKS_URL);
     const devReady = environment === "development" && Boolean(process.env.DEV_API_TOKEN);
     if (!options.verifyPrincipal && !oidcReady && !devReady) return reply.code(503).send({ status: "not_ready", missing: ["OIDC configuration"] });
-    return { status: "ready", dependencies: { identityVerifier: options.verifyPrincipal ? "injected" : oidcReady ? "oidc" : "development" } };
+    try {
+      await repository.checkHealth();
+    } catch {
+      return reply.code(503).send({ status: "not_ready", missing: ["database"] });
+    }
+    return { status: "ready", dependencies: { identityVerifier: options.verifyPrincipal ? "injected" : oidcReady ? "oidc" : "development", database: "available" } };
   });
   app.get("/v1/platform/capabilities", async () => ({ generatedAt: new Date().toISOString(), capabilities }));
 

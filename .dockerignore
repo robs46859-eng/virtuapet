@@ -1,0 +1,13 @@
+.git
+.github
+.env
+**/.env*
+!**/.env.example
+**/node_modules
+**/dist
+apps/web
+docs
+infra
+virtuapet_articles.md
+*.zip
+*.log

@@ -4,11 +4,11 @@
 
 Document ID: `VP-ARCH-HOSTINGER-001`
 
-Hostinger is the preferred provider for the `virtuapet.com` domain, public website, Node.js API, deployment environment variables, and—when the VPS operating controls below are satisfied—PostgreSQL 16. This is a target design, not evidence that production is deployed.
+Hostinger is the provider for the `virtuapet.com` domain and public website. The selected backend deployment is Azure Container Apps with Azure Database for PostgreSQL Flexible Server; see `AZURE_BACKEND_DEPLOYMENT.md`. Hostinger continues to own public DNS, while `api.virtuapet.com` points to the Azure ingress.
 
 Current observation (2026-09-14): the apex, `www`, and `api` names returned no A or CNAME records. Domain activation is pending and must be checked again after Hostinger reports availability.
 
-The existing application uses PostgreSQL-specific migrations and the `pg` driver. Hostinger web and cloud hosting provides hosted MySQL, not hosted PostgreSQL. Therefore VirtuaPet must not point the current application at Hostinger MySQL. The Hostinger-owned SQL option is a dedicated Hostinger VPS running PostgreSQL 16. An external managed PostgreSQL service remains the safer fallback if VirtuaPet cannot staff database operations.
+The existing application uses PostgreSQL-specific migrations and the `pg` driver. Hostinger managed SQL is MySQL and is not compatible with this application. VirtuaPet must not point the current application at Hostinger MySQL. Azure managed PostgreSQL avoids an application rewrite and removes routine database-server patching from the VirtuaPet team.
 
 ## Public layout
 

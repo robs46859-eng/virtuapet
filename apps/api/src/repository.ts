@@ -7,6 +7,7 @@ import type {
 } from "@virtuapet/contracts";
 
 export interface PetRepository {
+  checkHealth(): Promise<void>;
   create(profile: PetProfile): Promise<PetProfile>;
   findById(petId: string): Promise<PetProfile | undefined>;
   createGrant(grant: ConsentGrant): Promise<ConsentGrant>;
@@ -62,6 +63,7 @@ export interface PetRepository {
   listImagingAuditEvents(entityId: string): Promise<ImagingAuditEvent[]>;
 
   clear(): Promise<void>;
+  close(): Promise<void>;
 }
 
 export class MemoryPetRepository implements PetRepository {
@@ -87,6 +89,8 @@ export class MemoryPetRepository implements PetRepository {
   private readonly qualityResults = new Map<string, ClinicalQualityResult>();
   private readonly corrections = new Map<string, ClinicalCorrection>();
   private readonly auditEvents: ImagingAuditEvent[] = [];
+
+  async checkHealth(): Promise<void> {}
 
   async create(profile: PetProfile): Promise<PetProfile> {
     this.pets.set(profile.petId, structuredClone(profile));
@@ -280,4 +284,5 @@ export class MemoryPetRepository implements PetRepository {
     this.corrections.clear();
     this.auditEvents.length = 0;
   }
+  async close(): Promise<void> {}
 }

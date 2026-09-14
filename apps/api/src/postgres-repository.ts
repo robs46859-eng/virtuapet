@@ -28,6 +28,7 @@ const grantFromRow = (row: Record<string, unknown>): ConsentGrant => ({ grantId:
 
 export class PostgresPetRepository implements PetRepository {
   constructor(private readonly pool: Pool) {}
+  async checkHealth() { await this.pool.query("SELECT 1"); }
   static fromConnectionString(connectionString: string) { const config = process.env.VIRTUAPET_ENV === "production" ? { connectionString, max: 10, ssl: { rejectUnauthorized: true } } : { connectionString, max: 10 }; return new PostgresPetRepository(new Pool(config)); }
   async create(pet: PetProfile) { const result = await this.pool.query("INSERT INTO pet_profiles (pet_id,guardian_id,name,species,birth_date,microchip_id,record_version,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *", [pet.petId, pet.guardianId, pet.name, pet.species, pet.birthDate ?? null, pet.microchipId ?? null, pet.recordVersion, pet.createdAt, pet.updatedAt]); return petFromRow(result.rows[0]); }
   async findById(petId: string) { const result = await this.pool.query("SELECT * FROM pet_profiles WHERE pet_id=$1", [petId]); return result.rows[0] ? petFromRow(result.rows[0]) : undefined; }
