@@ -1,0 +1,14 @@
+{
+  "name": "virtuapet",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "build": "npm run build --workspace=@virtuapet/contracts && npm run build --workspace=@virtuapet/api && npm run build --workspace=@virtuapet/web",
+    "dev": "npm run dev --workspace=@virtuapet/api",
+    "test": "npm run build --workspace=@virtuapet/contracts && npm run test --workspaces --if-present",
+    "typecheck": "npm run build --workspace=@virtuapet/contracts && npm run typecheck --workspaces --if-present"
+  },
+  "engines": { "node": ">=22.12" }
+}

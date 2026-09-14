@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="VirtuaPet household and veterinary care dashboard" />
+    <title>VirtuaPet Dashboard</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside>
+        <a class="brand" href="#overview" aria-label="VirtuaPet home"><span>V</span> VirtuaPet</a>
+        <nav aria-label="Main navigation">
+          <a class="active" href="#overview">Overview</a>
+          <a href="#profile">Pet Profile</a>
+          <a href="#care">Care and VetOS</a>
+          <a href="#travel">Travel</a>
+          <a href="#twins">3D and AR</a>
+          <a href="#settings">Privacy</a>
+        </nav>
+        <p class="phase-label">Phase 1 foundation</p>
+      </aside>
+      <main>
+        <header>
+          <div><p class="eyebrow">Shared care workspace</p><h1>Your pet's world in one place</h1></div>
+          <button type="button" disabled>Add a pet</button>
+        </header>
+        <section class="notice" aria-label="Development status">
+          <strong>Development preview</strong>
+          <span>This interface contains no live customer or clinical records.</span>
+        </section>
+        <section id="overview" class="hero-grid">
+          <article class="welcome"><p class="eyebrow">Welcome to VirtuaPet</p><h2>Start with one trusted Pet Profile</h2><p>Health, care, travel, identity, and 3D experiences will connect through permissions you control.</p><a href="#profile">See the foundation</a></article>
+          <article class="status"><p class="eyebrow">Platform status</p><div class="status-row"><span>API foundation</span><b class="dot"></b></div><div class="status-row"><span>Clinical features</span><em>Research</em></div><div class="status-row"><span>Robot and travel</span><em>Discovery</em></div></article>
+        </section>
+        <section><div class="section-heading"><div><p class="eyebrow">Product system</p><h2>One dashboard, clear boundaries</h2></div><p>Every module displays its real release state.</p></div><div id="capabilities" class="card-grid" aria-live="polite"></div></section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+
