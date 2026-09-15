@@ -4,7 +4,7 @@
 
 Phase 1 and Phase 2 are code-complete at their documented engineering levels. Phase 3 is an engineering prototype: it provides imaging contracts, metadata validation, correction lineage, access gates, signed manifest delivery, PostgreSQL migration 003, and synthetic metric-calculation fixtures. It does not yet implement or validate a clinical DICOM-to-digital-twin pipeline.
 
-Deployment status as of 2026-09-15: `https://virtuapet.com/` and the Azure Container Apps `/healthz` and `/readyz` endpoints return HTTP 200. These public probes establish availability only. The deployed revision has not been proven to use Azure PostgreSQL, migration 004 is not verified live, and `api.virtuapet.com` remains outside the evidence recorded in this handoff.
+Deployment status as of 2026-09-15: `https://virtuapet.com/` returns HTTP 200. Azure revision `virtuapet-staging-api--a9f4854` runs the image for commit `a9f4854e678188c6fee6dc5ed413fceb099ca095` and receives 100% of staging API traffic. `/healthz`, `/readyz`, capabilities, approved-origin CORS, untrusted-origin denial, and anonymous protected-route denial were verified. The prior `virtuapet-staging-api--0000001` revision remains active at 0% for rollback. `api.virtuapet.com` custom-domain verification remains outside the evidence recorded here.
 
 The authoritative closeouts are:
 - Phase 1: `docs/product/PHASE_1_ACCEPTANCE.md`
@@ -23,7 +23,17 @@ They separate completed engineering evidence from outstanding operational, exter
 5. Run `node scripts/verify-postgres.mjs` with the same connection string.
 6. Run `npm audit --audit-level=high`.
 
-Latest local verification on 2026-09-15: 39 tests passed, type-check passed, production build passed, `git diff --check` passed, and `npm audit --audit-level=high` reported zero vulnerabilities. A fresh temporary PostgreSQL 16 cluster passed bootstrap, migrations 001-004, a second idempotent migration run, repository verification, runtime-role DDL denial, and read-only-role write denial. Azure execution remains unverified.
+Latest local verification on 2026-09-15: 39 tests passed, type-check passed, production build passed, `git diff --check` passed, and `npm audit --audit-level=high` reported zero vulnerabilities. A fresh temporary PostgreSQL 16 cluster passed bootstrap, migrations 001-004, a second idempotent migration run, repository verification, runtime-role DDL denial, and read-only-role write denial.
+
+Azure database and deployment evidence:
+
+- Private PostgreSQL server: `virtuapet-staging-pg`; public network access remains disabled.
+- Manual job `virtuapet-db-bootstrap` execution `virtuapet-db-bootstrap-zetl5h8` succeeded.
+- Manual job `virtuapet-db-migrate` execution `virtuapet-db-migrate-ir7e1t0` succeeded and logged migrations 001-004.
+- The API obtains `DATABASE_URL` from the `database-url` Container Apps secret. Generated passwords were not written to Git or documentation.
+- Direct execution inside the deployed replica confirmed `current_user=virtuapet_app`, database `virtuapet`, no `CREATE` privilege on schema `public`, all four migration records, and a transactionally rolled-back write/read round trip.
+- Published image digest: `sha256:42b6a83a09d34cfb9f2111d7c05745e69bd777e7ebb67bc244c1f84b992f8a37`.
+- PostgreSQL backup retention is 7 days with geo-redundant backup disabled. No restore drill has been completed.
 
 ## Phase 3 clinical twin validation status
 
@@ -56,12 +66,12 @@ Latest local verification on 2026-09-15: 39 tests passed, type-check passed, pro
 
 ### Immediate operational sequence
 
-1. Authenticate Azure CLI with the approved tenant without placing credentials in chat or source control.
-2. Run the bootstrap and migrations from a one-time Container Apps job attached to the PostgreSQL private network.
-3. Bind the least-privilege runtime `DATABASE_URL` through an Azure secret reference and deploy a new API revision.
-4. Prove migration checksums, PostgreSQL-backed persistence, readiness failure on database loss, role restrictions, and two-tenant denial cases.
-5. Perform a non-destructive point-in-time restore drill and record evidence.
-6. Design transaction-bound database identity before enabling RLS on existing tenant tables.
+1. Design and implement transaction-bound database identity before enabling RLS on existing tenant tables.
+2. Prove two-tenant allowed and denied cases against Azure PostgreSQL using controlled authenticated identities.
+3. Replace the current TCP-only Container Apps readiness probe with an HTTP `/readyz` probe while retaining `/healthz` for liveness.
+4. Perform a non-destructive point-in-time restore drill and record evidence.
+5. Verify `api.virtuapet.com` custom-domain DNS and certificate binding.
+6. Start the VirtuaPet-side GibiWorld manifest API and adapter without modifying the GibiWorld repository.
 
 ## Phase 5 commercial scale
 

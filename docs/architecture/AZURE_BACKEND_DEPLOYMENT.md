@@ -49,7 +49,7 @@ Do not connect this repository to Hostinger managed MySQL. The current migration
 1. Select the Azure subscription and a US region after checking current service availability and pricing.
 2. Create separate resource groups for staging and production. Start with staging and synthetic records only.
 3. Create PostgreSQL, private/restricted networking, TLS enforcement, backup retention, and distinct owner, migrator, and application roles.
-4. Run all three migrations with the migrator role, then run `scripts/verify-postgres.mjs` in staging.
+4. Run all migrations with the migrator role, then run `scripts/verify-postgres.mjs` in staging.
 5. Build the root `Dockerfile`, scan it, push a content-addressed image to Azure Container Registry, and deploy that exact digest to Container Apps.
 6. Assign a managed identity and grant only image-pull, secret-read, logging, and required storage permissions.
 7. Configure secrets and non-secret environment values. Never place secret values in shell history or committed parameter files.
@@ -63,7 +63,7 @@ Do not connect this repository to Hostinger managed MySQL. The current migration
 - `/readyz` returns `200` only when both OIDC configuration and PostgreSQL are available; otherwise it returns `503`.
 - Protected endpoints return `401` without a valid bearer token.
 - Browser CORS accepts only the two VirtuaPet website origins and rejects arbitrary origins.
-- Migrations `001`, `002`, and `003` apply successfully, and the persistent round-trip verifier passes.
+- Migrations `001` through `004` apply successfully, and the persistent round-trip verifier passes.
 - The database is not exposed to unrestricted public ingress.
 - Secrets are absent from Git history, built web assets, image layers, application logs, and deployment output.
 - A prior healthy Container Apps revision can be restored without rebuilding.
@@ -72,4 +72,8 @@ Do not connect this repository to Hostinger managed MySQL. The current migration
 
 ## Current setup status
 
-The API now has an Azure-ready multi-stage container definition, production origin allow-listing, database-aware readiness, and clean repository shutdown. Local type checking, the 25 baseline tests plus the new deployment-safety tests, and the monorepo build must pass before provisioning. Azure resource creation is pending Azure sign-in, subscription selection, cost approval, identity-provider values, and generation of environment-specific secrets.
+As of 2026-09-15, staging revision `virtuapet-staging-api--a9f4854` runs the immutable image for commit `a9f4854` and receives 100% of API traffic. The previous revision remains active at 0% as the rollback target. Azure PostgreSQL remains private, migrations 001-004 were applied by manual Container Apps jobs, and the API uses a secret-backed `virtuapet_app` connection. Direct and default-host probes passed for health, readiness, capabilities, authentication denial, and CORS.
+
+The current Container Apps liveness, readiness, and startup probes are TCP-based. Manual HTTP `/readyz` verification proves the deployed dependency check at the recorded moment, but the platform will not automatically remove a replica merely because `/readyz` returns 503. Replace the readiness probe with HTTP `/readyz` and keep liveness on HTTP `/healthz` in the next infrastructure revision.
+
+Remaining production gates include transaction-bound tenant identity and RLS, two-tenant integration tests, backup restore, custom `api.virtuapet.com` verification, alerts, authenticated workflow tests, and production authorization.

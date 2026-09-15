@@ -37,7 +37,7 @@ Phase 1, Phase 2, and the Phase 3 Clinical Twin Validation release are code-comp
 
 Phase 3 is an engineering prototype with passing code tests. Real DICOM pixel processing, measured segmentation and mesh accuracy, representative retrospective validation, prospective multi-center trials, external veterinary review, physical headset validation, and production infrastructure remain gates. This is not an autonomous surgical system or automated primary diagnostic device.
 
-Phase 4 currently has passing local contract/API tests and build checks. Migration 004 has not been applied to the private Azure PostgreSQL server, the deployed API has not been proven to use the PostgreSQL adapter, and backup/restore and tenant-isolation drills have not been performed. See `docs/product/PHASE_4_ACCEPTANCE.md` for the evidence boundary.
+Phase 4 currently has passing local contract/API tests and build checks. On 2026-09-15, Azure revision `virtuapet-staging-api--a9f4854` was deployed from the immutable commit image, migrations 001-004 were applied through private-network jobs, and the revision was proven to connect as the least-privilege `virtuapet_app` role. The staging revision receives 100% of API traffic and the prior revision remains active at 0% for rollback. Backup restore, transaction-bound RLS, authenticated end-user workflows, and tenant-isolation drills remain open. See `docs/product/PHASE_4_ACCEPTANCE.md` for the evidence boundary.
 
 ## Run locally
 
