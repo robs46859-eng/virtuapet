@@ -8,6 +8,7 @@ on:
       - "packages/contracts/**"
       - "infra/migrations/**"
       - "scripts/migrate.mjs"
+      - "scripts/bootstrap-postgres.mjs"
       - "Dockerfile"
       - ".dockerignore"
       - "package.json"

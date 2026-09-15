@@ -22,6 +22,7 @@ COPY --from=build --chown=virtuapet:virtuapet /app/apps/api/dist ./apps/api/dist
 COPY --from=build --chown=virtuapet:virtuapet /app/packages/contracts/package.json ./packages/contracts/package.json
 COPY --from=build --chown=virtuapet:virtuapet /app/packages/contracts/dist ./packages/contracts/dist
 COPY --chown=virtuapet:virtuapet scripts/migrate.mjs ./scripts/migrate.mjs
+COPY --chown=virtuapet:virtuapet scripts/bootstrap-postgres.mjs ./scripts/bootstrap-postgres.mjs
 COPY --chown=virtuapet:virtuapet infra/migrations ./infra/migrations
 USER virtuapet
 EXPOSE 8080

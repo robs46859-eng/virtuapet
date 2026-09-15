@@ -8,6 +8,7 @@
     "build": "npm run build --workspace=@virtuapet/contracts && npm run build --workspace=@virtuapet/api && npm run build --workspace=@virtuapet/web",
     "dev": "npm run dev --workspace=@virtuapet/api",
     "start": "npm run start --workspace=@virtuapet/api",
+    "bootstrap:postgres": "node scripts/bootstrap-postgres.mjs",
     "migrate": "node scripts/migrate.mjs",
     "test": "npm run build --workspace=@virtuapet/contracts && npm run test --workspaces --if-present",
     "typecheck": "npm run build --workspace=@virtuapet/contracts && npm run typecheck --workspaces --if-present"
