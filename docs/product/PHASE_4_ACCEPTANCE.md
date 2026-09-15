@@ -45,12 +45,14 @@ Azure bootstrap and migrations 001-004 completed through the private Container A
 
 - Commit image: `a9f4854e678188c6fee6dc5ed413fceb099ca095`
 - Image digest: `sha256:42b6a83a09d34cfb9f2111d7c05745e69bd777e7ebb67bc244c1f84b992f8a37`
-- Revision: `virtuapet-staging-api--a9f4854`
+- Revision: `virtuapet-staging-api--a9f4854-http`
 - Traffic: new revision 100%; prior revision active at 0% for rollback
+- Platform probes: HTTP `/healthz` for liveness/startup and HTTP `/readyz` for readiness; revision healthy
 - Migration execution: `virtuapet-db-migrate-ir7e1t0`, succeeded
 - API checks: health 200, readiness 200, capabilities 200, anonymous protected route 401
 - CORS: `https://virtuapet.com` allowed; an untrusted origin received no allow-origin header
 - Runtime database identity: `virtuapet_app`, no schema-create privilege
+- Domain boundary: `virtuapet.com` returned 200; `api.virtuapet.com` had no DNS answer and no Azure custom-domain binding
 - Migration checksums:
   - `001_phase2_foundation.sql`: `9ed80983afb26df723fd7b62e68ae49fc176b479e81d46859e342b6fe653f74d`
   - `002_phase2_clinic.sql`: `902f7beedd6bfca1996f9546dbf212b807726d40e253a39274cf026858e62fe7`

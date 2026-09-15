@@ -72,8 +72,8 @@ Do not connect this repository to Hostinger managed MySQL. The current migration
 
 ## Current setup status
 
-As of 2026-09-15, staging revision `virtuapet-staging-api--a9f4854` runs the immutable image for commit `a9f4854` and receives 100% of API traffic. The previous revision remains active at 0% as the rollback target. Azure PostgreSQL remains private, migrations 001-004 were applied by manual Container Apps jobs, and the API uses a secret-backed `virtuapet_app` connection. Direct and default-host probes passed for health, readiness, capabilities, authentication denial, and CORS.
+As of 2026-09-15, staging revision `virtuapet-staging-api--a9f4854-http` runs the immutable image for commit `a9f4854` and receives 100% of API traffic. Previous revisions remain active at 0% as rollback targets. Azure PostgreSQL remains private, migrations 001-004 were applied by manual Container Apps jobs, and the API uses a secret-backed `virtuapet_app` connection. Direct and default-host checks passed for health, readiness, capabilities, authentication denial, and CORS.
 
-The current Container Apps liveness, readiness, and startup probes are TCP-based. Manual HTTP `/readyz` verification proves the deployed dependency check at the recorded moment, but the platform will not automatically remove a replica merely because `/readyz` returns 503. Replace the readiness probe with HTTP `/readyz` and keep liveness on HTTP `/healthz` in the next infrastructure revision.
+Container Apps now uses HTTP `/healthz` for liveness and startup and HTTP `/readyz` for dependency-aware readiness. The active revision reported healthy after the probe change and both paths returned HTTP 200.
 
-Remaining production gates include transaction-bound tenant identity and RLS, two-tenant integration tests, backup restore, custom `api.virtuapet.com` verification, alerts, authenticated workflow tests, and production authorization.
+Remaining production gates include transaction-bound tenant identity and RLS, two-tenant integration tests, backup restore, alerts, authenticated workflow tests, and production authorization. `api.virtuapet.com` currently has no A/CNAME DNS answer and no Azure custom-domain binding; Hostinger DNS and Azure managed TLS must be configured before that hostname is usable.

@@ -4,7 +4,9 @@
 
 Phase 1 and Phase 2 are code-complete at their documented engineering levels. Phase 3 is an engineering prototype: it provides imaging contracts, metadata validation, correction lineage, access gates, signed manifest delivery, PostgreSQL migration 003, and synthetic metric-calculation fixtures. It does not yet implement or validate a clinical DICOM-to-digital-twin pipeline.
 
-Deployment status as of 2026-09-15: `https://virtuapet.com/` returns HTTP 200. Azure revision `virtuapet-staging-api--a9f4854` runs the image for commit `a9f4854e678188c6fee6dc5ed413fceb099ca095` and receives 100% of staging API traffic. `/healthz`, `/readyz`, capabilities, approved-origin CORS, untrusted-origin denial, and anonymous protected-route denial were verified. The prior `virtuapet-staging-api--0000001` revision remains active at 0% for rollback. `api.virtuapet.com` custom-domain verification remains outside the evidence recorded here.
+Deployment status as of 2026-09-15: `https://virtuapet.com/` returns HTTP 200. Azure revision `virtuapet-staging-api--a9f4854-http` runs the image for commit `a9f4854e678188c6fee6dc5ed413fceb099ca095` and receives 100% of staging API traffic. HTTP liveness uses `/healthz`, readiness uses `/readyz`, and startup uses `/healthz`; the revision is healthy and both endpoints return 200. Capabilities, approved-origin CORS, untrusted-origin denial, and anonymous protected-route denial were also verified. Prior revisions remain active at 0% for rollback.
+
+`api.virtuapet.com` is not active: fresh DNS checks returned no A or CNAME record, HTTPS could not resolve the host, and the Container App has no custom-domain binding. Do not report this hostname as deployed until Hostinger DNS and Azure certificate binding are completed and tested.
 
 The authoritative closeouts are:
 - Phase 1: `docs/product/PHASE_1_ACCEPTANCE.md`
@@ -68,9 +70,9 @@ Azure database and deployment evidence:
 
 1. Design and implement transaction-bound database identity before enabling RLS on existing tenant tables.
 2. Prove two-tenant allowed and denied cases against Azure PostgreSQL using controlled authenticated identities.
-3. Replace the current TCP-only Container Apps readiness probe with an HTTP `/readyz` probe while retaining `/healthz` for liveness.
+3. Add the required Hostinger DNS verification record and API CNAME, bind `api.virtuapet.com` to Container Apps with a managed certificate, and verify DNS/TLS/API behavior.
 4. Perform a non-destructive point-in-time restore drill and record evidence.
-5. Verify `api.virtuapet.com` custom-domain DNS and certificate binding.
+5. Exercise readiness failure by safely removing database access from an isolated revision; do not interrupt the active revision.
 6. Start the VirtuaPet-side GibiWorld manifest API and adapter without modifying the GibiWorld repository.
 
 ## Phase 5 commercial scale
