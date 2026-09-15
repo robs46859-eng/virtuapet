@@ -38,7 +38,9 @@ function render(items: Capability[]) {
     </article>`).join("");
 }
 
-fetch("http://127.0.0.1:8080/v1/platform/capabilities")
+const apiBaseUrl = import.meta.env.VITE_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8080";
+
+fetch(`${apiBaseUrl.replace(/\/$/, "")}/v1/platform/capabilities`)
   .then(response => response.ok ? response.json() : Promise.reject(new Error("API unavailable")))
   .then(data => render(data.capabilities))
   .catch(() => render(fallback));
