@@ -52,6 +52,13 @@ describe("VirtuaPet Phase 2 API", () => {
     expect(response.json()).toMatchObject({ status: "not_ready", missing: ["database"] });
   });
 
+  it("rejects the in-memory repository in staging", async () => {
+    app = await buildApp({ verifyPrincipal: verifier, environment: "staging", publicApiBaseUrl: "https://api.virtuapet.com", clinicalSigningKey: "test-only-clinical-signing-key-32-bytes", corsAllowedOrigins: ["https://virtuapet.com"] });
+    const response = await app.inject({ method: "GET", url: "/readyz" });
+    expect(response.statusCode).toBe(503);
+    expect(response.json()).toMatchObject({ status: "not_ready", missing: ["database"] });
+  });
+
   it("requires an explicit browser origin in production", async () => {
     await expect(buildApp({ verifyPrincipal: verifier, environment: "production", publicApiBaseUrl: "https://api.virtuapet.com", clinicalSigningKey: "test-only-clinical-signing-key-32-bytes" })).rejects.toThrow("CORS_ALLOWED_ORIGINS");
   });

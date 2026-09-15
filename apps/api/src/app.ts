@@ -45,7 +45,7 @@ async function clinicMembership(repository: PetRepository, principal: Principal)
 
 export async function buildApp(options: AppOptions = {}) {
   const environment = options.environment ?? process.env.VIRTUAPET_ENV ?? "development";
-  const repository = options.repository ?? new MemoryPetRepository();
+  const repository = options.repository ?? new MemoryPetRepository(environment);
   const verifyPrincipal = options.verifyPrincipal ?? verifierFromEnvironment();
   const clinicalSigningKey = options.clinicalSigningKey ?? process.env.CLINICAL_TWIN_SIGNING_KEY ?? (environment === "test" ? "test-only-clinical-signing-key-32-bytes" : undefined);
   if (!clinicalSigningKey) throw new Error("CLINICAL_TWIN_SIGNING_KEY is required outside tests");

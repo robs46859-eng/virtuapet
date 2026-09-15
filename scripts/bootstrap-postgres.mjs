@@ -3,7 +3,8 @@ import pg from "pg";
 const required = [
   "DATABASE_ADMIN_URL",
   "VIRTUAPET_MIGRATOR_PASSWORD",
-  "VIRTUAPET_APP_PASSWORD"
+  "VIRTUAPET_APP_PASSWORD",
+  "VIRTUAPET_READONLY_PASSWORD"
 ];
 
 for (const name of required) {
@@ -13,8 +14,10 @@ for (const name of required) {
 const database = process.env.VIRTUAPET_DATABASE ?? "virtuapet";
 const migratorRole = process.env.VIRTUAPET_MIGRATOR_ROLE ?? "virtuapet_migrator";
 const appRole = process.env.VIRTUAPET_APP_ROLE ?? "virtuapet_app";
+const readonlyRole = process.env.VIRTUAPET_READONLY_ROLE ?? "virtuapet_readonly";
+const readonlyPassword = process.env.VIRTUAPET_READONLY_PASSWORD;
 
-for (const [label, value] of Object.entries({ database, migratorRole, appRole })) {
+for (const [label, value] of Object.entries({ database, migratorRole, appRole, readonlyRole })) {
   if (!/^[a-z][a-z0-9_]{0,62}$/.test(value)) {
     throw new Error(`${label} must be a safe lowercase PostgreSQL identifier`);
   }
@@ -34,7 +37,8 @@ await admin.connect();
 try {
   for (const [role, password] of [
     [migratorRole, process.env.VIRTUAPET_MIGRATOR_PASSWORD],
-    [appRole, process.env.VIRTUAPET_APP_PASSWORD]
+    [appRole, process.env.VIRTUAPET_APP_PASSWORD],
+    [readonlyRole, readonlyPassword]
   ]) {
     const exists = await admin.query("SELECT 1 FROM pg_roles WHERE rolname = $1", [role]);
     const command = exists.rowCount
@@ -59,16 +63,22 @@ try {
   const databaseId = quoteIdentifier(database);
   const migratorId = quoteIdentifier(migratorRole);
   const appId = quoteIdentifier(appRole);
+  const readonlyId = quoteIdentifier(readonlyRole);
 
   await target.query(`REVOKE ALL ON DATABASE ${databaseId} FROM PUBLIC`);
-  await target.query(`GRANT CONNECT ON DATABASE ${databaseId} TO ${migratorId}, ${appId}`);
+  await target.query(`GRANT CONNECT ON DATABASE ${databaseId} TO ${migratorId}, ${appId}, ${readonlyId}`);
   await target.query("REVOKE CREATE ON SCHEMA public FROM PUBLIC");
+  await target.query(`REVOKE CREATE ON SCHEMA public FROM ${appId}, ${readonlyId}`);
   await target.query(`GRANT USAGE, CREATE ON SCHEMA public TO ${migratorId}`);
-  await target.query(`GRANT USAGE ON SCHEMA public TO ${appId}`);
+  await target.query(`GRANT USAGE ON SCHEMA public TO ${appId}, ${readonlyId}`);
   await target.query(`ALTER DEFAULT PRIVILEGES FOR ROLE ${migratorId} IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${appId}`);
   await target.query(`ALTER DEFAULT PRIVILEGES FOR ROLE ${migratorId} IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO ${appId}`);
+  await target.query(`ALTER DEFAULT PRIVILEGES FOR ROLE ${migratorId} IN SCHEMA public GRANT SELECT ON TABLES TO ${readonlyId}`);
+  await target.query(`GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${appId}`);
+  await target.query(`GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ${appId}`);
+  await target.query(`GRANT SELECT ON ALL TABLES IN SCHEMA public TO ${readonlyId}`);
 } finally {
   await target.end();
 }
 
-console.log(`PostgreSQL database and least-privilege roles are ready for ${database}`);
+console.log(`PostgreSQL database and least-privilege roles are ready for ${database} (migrator: ${migratorRole}, app: ${appRole}, readonly: ${readonlyRole})`);

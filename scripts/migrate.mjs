@@ -16,7 +16,6 @@ try {
       applied_at timestamptz NOT NULL DEFAULT now()
     )
   `);
-
   const dir = resolve("infra/migrations");
   const files = (await readdir(dir)).filter(f => f.endsWith(".sql")).sort();
   for (const file of files) {

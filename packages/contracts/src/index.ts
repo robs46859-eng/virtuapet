@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export * from "./imaging.js";
+export * from "./spatial.js";
 
 export const uuidSchema = z.string().uuid();
 export const speciesSchema = z.enum(["dog", "cat", "bird", "reptile", "small_mammal", "other"]);

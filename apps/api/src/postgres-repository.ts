@@ -5,11 +5,13 @@ import {
   imagingSegmentationSchema, imagingMeshSchema, clinicalModelSchema,
   surgicalPlanSchema, rehearsalSessionSchema, clinicalQualityResultSchema,
   clinicalCorrectionSchema, imagingAuditEventSchema,
+  spatialAssetManifestSchema,
   type Appointment, type ClinicMessage, type ConsentGrant, type FelineGrimaceAssessment,
   type InventoryItem, type Membership, type Organization, type PetProfile, type Recall,
   type RegulationEvidence, type ImagingStudy, type ImagingSeries, type ImagingVolume,
   type ImagingSegmentation, type ImagingMesh, type ClinicalModel, type SurgicalPlan,
-  type RehearsalSession, type ClinicalQualityResult, type ClinicalCorrection, type ImagingAuditEvent
+  type RehearsalSession, type ClinicalQualityResult, type ClinicalCorrection, type ImagingAuditEvent,
+  type SpatialAssetManifest
 } from "@virtuapet/contracts";
 import type { PetRepository } from "./repository.js";
 
@@ -25,6 +27,32 @@ const dateOnlyFromRow = (value: unknown): string => {
   return Number.isNaN(parsed.getTime()) ? text.slice(0, 10) : parsed.toISOString().slice(0, 10);
 };
 const grantFromRow = (row: Record<string, unknown>): ConsentGrant => ({ grantId: String(row.grant_id), petId: String(row.pet_id), grantorUserId: String(row.grantor_user_id), granteeId: String(row.grantee_id), scopes: row.scopes as ConsentGrant["scopes"], purpose: String(row.purpose), startsAt: new Date(String(row.starts_at)).toISOString(), expiresAt: new Date(String(row.expires_at)).toISOString(), revokedAt: row.revoked_at ? new Date(String(row.revoked_at)).toISOString() : null });
+const spatialManifestFromRow = (row: Record<string, unknown>): SpatialAssetManifest => spatialAssetManifestSchema.parse({
+  manifestVersion: row.manifest_version,
+  assetId: String(row.asset_id),
+  version: Number(row.version),
+  ownerId: String(row.owner_id),
+  tenantId: String(row.tenant_id),
+  source: String(row.source),
+  provenance: row.provenance,
+  glbUri: String(row.glb_uri),
+  sha256: String(row.sha256).trim(),
+  units: row.units,
+  scale: Number(row.scale),
+  upAxis: row.up_axis,
+  forwardAxis: row.forward_axis,
+  laterality: row.laterality,
+  bounds: row.bounds,
+  origin: row.origin,
+  supportedAnimationClips: row.supported_animation_clips,
+  entitlementRequirements: row.entitlement_requirements,
+  expiresAt: new Date(String(row.expires_at)).toISOString(),
+  revokedAt: row.revoked_at ? new Date(String(row.revoked_at)).toISOString() : null,
+  isRevoked: Boolean(row.is_revoked),
+  minClientVersion: String(row.min_client_version),
+  rollbackVersion: row.rollback_version === null ? null : Number(row.rollback_version),
+  signature: String(row.signature)
+});
 
 export class PostgresPetRepository implements PetRepository {
   constructor(private readonly pool: Pool) {}
@@ -357,6 +385,54 @@ export class PostgresPetRepository implements PetRepository {
       entityType: String(row.entity_type), entityId: String(row.entity_id), correlationId: String(row.correlation_id),
       details: row.details, occurredAt: new Date(row.occurred_at).toISOString()
     }));
+  }
+
+  async createSpatialManifest(manifest: SpatialAssetManifest): Promise<SpatialAssetManifest> {
+    const result = await this.pool.query(
+      `INSERT INTO spatial_asset_manifests
+        (asset_id, version, owner_id, tenant_id, source, provenance, glb_uri, sha256, units, scale,
+         up_axis, forward_axis, laterality, bounds, origin, supported_animation_clips,
+         entitlement_requirements, expires_at, revoked_at, is_revoked, min_client_version,
+         rollback_version, signature, manifest_version)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
+       RETURNING *`,
+      [manifest.assetId, manifest.version, manifest.ownerId, manifest.tenantId, manifest.source,
+       JSON.stringify(manifest.provenance), manifest.glbUri, manifest.sha256, manifest.units, manifest.scale,
+       manifest.upAxis, manifest.forwardAxis, manifest.laterality, JSON.stringify(manifest.bounds),
+       JSON.stringify(manifest.origin), JSON.stringify(manifest.supportedAnimationClips),
+       JSON.stringify(manifest.entitlementRequirements), manifest.expiresAt, manifest.revokedAt,
+       manifest.isRevoked, manifest.minClientVersion, manifest.rollbackVersion, manifest.signature,
+       manifest.manifestVersion]
+    );
+    return spatialManifestFromRow(result.rows[0]);
+  }
+
+  async findSpatialManifestById(assetId: string): Promise<SpatialAssetManifest | undefined> {
+    const result = await this.pool.query("SELECT * FROM spatial_asset_manifests WHERE asset_id=$1 ORDER BY version DESC LIMIT 1", [assetId]);
+    return result.rows[0] ? spatialManifestFromRow(result.rows[0]) : undefined;
+  }
+
+  async revokeSpatialManifest(assetId: string, revokedAt: string): Promise<SpatialAssetManifest | undefined> {
+    const result = await this.pool.query(
+      `UPDATE spatial_asset_manifests
+       SET is_revoked=true, revoked_at=$2
+       WHERE (asset_id, version) = (
+         SELECT asset_id, version FROM spatial_asset_manifests
+         WHERE asset_id=$1 AND is_revoked=false ORDER BY version DESC LIMIT 1
+       ) RETURNING *`,
+      [assetId, revokedAt]
+    );
+    return result.rows[0] ? spatialManifestFromRow(result.rows[0]) : undefined;
+  }
+
+  async listSpatialManifestsByOwner(ownerId: string): Promise<SpatialAssetManifest[]> {
+    const result = await this.pool.query("SELECT * FROM spatial_asset_manifests WHERE owner_id=$1 ORDER BY version DESC", [ownerId]);
+    return result.rows.map(spatialManifestFromRow);
+  }
+
+  async listSpatialManifestsByTenant(tenantId: string): Promise<SpatialAssetManifest[]> {
+    const result = await this.pool.query("SELECT * FROM spatial_asset_manifests WHERE tenant_id=$1 ORDER BY created_at DESC", [tenantId]);
+    return result.rows.map(spatialManifestFromRow);
   }
 
   async clear() { throw new Error("clear is unavailable for persistent repositories"); }

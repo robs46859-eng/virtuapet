@@ -168,6 +168,12 @@ Dice or similar overlap metrics must be defined per anatomy and indication. A si
 
 ## 7. Phase 4 Spatial and Mobility Pilots
 
+### 7.0 Current engineering status (2026-09-15)
+
+The signed spatial-manifest contract, persistence interfaces, PostgreSQL adapter methods, and migration 004 are implemented and pass local automated checks. Live migration, PostgreSQL-backed API proof, database tenant-isolation testing, backup/restore, GibiWorld integration, and all physical pilots remain open. Phase 4 is therefore active, not closed.
+
+Before broad row-level security is enabled, the API must bind the authenticated user and organization to each database transaction through a server-controlled mechanism. Policies based only on freely client-set custom PostgreSQL settings are not an acceptable security boundary.
+
 ### 7.1 GibiWorld rehearsal
 
 - Load only signed and entitled clinical assets.
@@ -189,6 +195,16 @@ Pilot gates include zero serious safety incidents, 99.9% safety-stop success in 
 - Use vetted partner vehicles before owned fleet investment.
 - Capture handler verification, climate, route, rest, water, feeding, medications, custody, emergency route, and incident evidence.
 - Drone pilots carry permitted property only through qualified operators. Live-animal drone transportation is excluded.
+
+### 7.4 Phase 4 foundation exit evidence
+
+- Migration 004 applied through the private Azure network with checksum evidence.
+- Deployed API proven to use the least-privilege PostgreSQL role.
+- Cross-tenant allowed and denied tests executed against PostgreSQL, not only memory fixtures.
+- Readiness returns unavailable when the required database or schema is unavailable.
+- Point-in-time restore drill succeeds without replacing the active database.
+- Signed-manifest tamper, expiry, revocation, entitlement, compatibility, scale, axis, laterality, and rollback tests pass.
+- No clinical, headset, robot, travel, drone, or holographic-rendering claim advances beyond its collected evidence.
 
 ## 8. Phase 5 Commercial Scale
 
@@ -214,4 +230,3 @@ Each workstream has a named product owner, technical owner, security owner, andâ
 - travel completion, custody evidence, and welfare incidents;
 - robot mission, docking, intervention, and safety-stop performance;
 - revenue, direct costs, gross margin, operating expense, and runway.
-

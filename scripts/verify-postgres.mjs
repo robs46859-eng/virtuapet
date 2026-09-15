@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { PostgresPetRepository } from "../apps/api/dist/postgres-repository.js";
+import { signSpatialAssetManifest } from "../packages/contracts/dist/index.js";
 
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
 const repository = PostgresPetRepository.fromConnectionString(process.env.DATABASE_URL);
@@ -154,7 +155,29 @@ try {
   const readAudit = await repository.listImagingAuditEvents(modelId);
   if (readAudit.length !== 1) throw new Error("Imaging audit event round trip failed");
 
-  console.log("PostgreSQL Phase 2 & Phase 3 repository verification passed");
+  // Phase 4 signed spatial-manifest persistence
+  const assetId = randomUUID();
+  const manifest = signSpatialAssetManifest({
+    manifestVersion: "2.0.0", assetId, version: 1, ownerId: guardianId, tenantId: clinicId,
+    source: "pawsome3d", provenance: {
+      generator: "Pawsome3D verification fixture", generatedAt: now,
+      sourceHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      sourceReference: "local-postgres-verification", lineage: ["synthetic_fixture"]
+    },
+    glbUri: "https://assets.virtuapet.com/verification/pet.glb",
+    sha256: "a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0",
+    units: "mm", scale: 1, upAxis: "Y_UP", forwardAxis: "NEGATIVE_Z_FORWARD",
+    laterality: "L", bounds: { min: [-1, 0, -1], max: [1, 2, 1] }, origin: [0, 0, 0],
+    supportedAnimationClips: ["idle"], entitlementRequirements: ["spatial.asset.view"],
+    expiresAt: new Date(Date.now() + 3600000).toISOString(), revokedAt: null, isRevoked: false,
+    minClientVersion: "1.0.0", rollbackVersion: null
+  }, "local-verification-key-not-for-production");
+  await repository.createSpatialManifest(manifest);
+  if ((await repository.findSpatialManifestById(assetId))?.sha256 !== manifest.sha256) throw new Error("Spatial manifest round trip failed");
+  if ((await repository.listSpatialManifestsByTenant(clinicId)).length !== 1) throw new Error("Spatial tenant listing failed");
+  if (!(await repository.revokeSpatialManifest(assetId, new Date().toISOString()))?.isRevoked) throw new Error("Spatial manifest revocation failed");
+
+  console.log("PostgreSQL Phase 2, Phase 3, and Phase 4 repository verification passed");
 } finally {
   await repository.close();
 }

@@ -3,7 +3,7 @@ import type {
   Membership, Organization, PetProfile, Recall, RegulationEvidence,
   ImagingStudy, ImagingSeries, ImagingVolume, ImagingSegmentation, ImagingMesh,
   ClinicalModel, SurgicalPlan, RehearsalSession, ClinicalQualityResult,
-  ClinicalCorrection, ImagingAuditEvent
+  ClinicalCorrection, ImagingAuditEvent, SpatialAssetManifest
 } from "@virtuapet/contracts";
 
 export interface PetRepository {
@@ -62,6 +62,13 @@ export interface PetRepository {
   createImagingAuditEvent(event: ImagingAuditEvent): Promise<ImagingAuditEvent>;
   listImagingAuditEvents(entityId: string): Promise<ImagingAuditEvent[]>;
 
+  // Phase 4 Spatial Assets
+  createSpatialManifest(manifest: SpatialAssetManifest): Promise<SpatialAssetManifest>;
+  findSpatialManifestById(assetId: string): Promise<SpatialAssetManifest | undefined>;
+  revokeSpatialManifest(assetId: string, revokedAt: string): Promise<SpatialAssetManifest | undefined>;
+  listSpatialManifestsByOwner(ownerId: string): Promise<SpatialAssetManifest[]>;
+  listSpatialManifestsByTenant(tenantId: string): Promise<SpatialAssetManifest[]>;
+
   clear(): Promise<void>;
   close(): Promise<void>;
 }
@@ -89,8 +96,15 @@ export class MemoryPetRepository implements PetRepository {
   private readonly qualityResults = new Map<string, ClinicalQualityResult>();
   private readonly corrections = new Map<string, ClinicalCorrection>();
   private readonly auditEvents: ImagingAuditEvent[] = [];
+  private readonly spatialManifests = new Map<string, SpatialAssetManifest>();
 
-  async checkHealth(): Promise<void> {}
+  constructor(private readonly environment: string = "development") {}
+
+  async checkHealth(): Promise<void> {
+    if (this.environment === "production" || this.environment === "staging") {
+      throw new Error("Persistent PostgreSQL database required in production/staging");
+    }
+  }
 
   async create(profile: PetProfile): Promise<PetProfile> {
     this.pets.set(profile.petId, structuredClone(profile));
@@ -127,138 +141,101 @@ export class MemoryPetRepository implements PetRepository {
   async createInventoryItem(item: InventoryItem) { this.inventory.set(item.inventoryItemId, structuredClone(item)); return structuredClone(item); }
   async createClinicMessage(item: ClinicMessage) { this.messages.set(item.messageId, structuredClone(item)); return structuredClone(item); }
 
-  // Phase 3 Clinical Imaging
-  async createImagingStudy(study: ImagingStudy): Promise<ImagingStudy> {
-    this.studies.set(study.studyId, structuredClone(study));
-    return structuredClone(study);
-  }
-  async findImagingStudyById(studyId: string): Promise<ImagingStudy | undefined> {
-    const study = this.studies.get(studyId);
-    return study ? structuredClone(study) : undefined;
-  }
-  async findImagingStudyByUid(studyInstanceUid: string): Promise<ImagingStudy | undefined> {
-    const study = [...this.studies.values()].find(s => s.studyInstanceUid === studyInstanceUid);
-    return study ? structuredClone(study) : undefined;
-  }
-  async listImagingStudiesByPet(petId: string): Promise<ImagingStudy[]> {
-    return [...this.studies.values()].filter(s => s.petId === petId).map(s => structuredClone(s));
-  }
-  async createImagingSeries(series: ImagingSeries): Promise<ImagingSeries> {
-    this.series.set(series.seriesId, structuredClone(series));
-    return structuredClone(series);
-  }
-  async findImagingSeriesById(seriesId: string): Promise<ImagingSeries | undefined> {
-    const s = this.series.get(seriesId);
-    return s ? structuredClone(s) : undefined;
-  }
-  async listImagingSeriesByStudy(studyId: string): Promise<ImagingSeries[]> {
-    return [...this.series.values()].filter(s => s.studyId === studyId).map(s => structuredClone(s));
-  }
-  async updateImagingSeriesStatus(seriesId: string, status: ImagingSeries["status"], quarantineReason?: string | null): Promise<ImagingSeries | undefined> {
+  async createImagingStudy(study: ImagingStudy) { this.studies.set(study.studyId, structuredClone(study)); return structuredClone(study); }
+  async findImagingStudyById(studyId: string) { const s = this.studies.get(studyId); return s ? structuredClone(s) : undefined; }
+  async findImagingStudyByUid(studyInstanceUid: string) { const s = [...this.studies.values()].find(item => item.studyInstanceUid === studyInstanceUid); return s ? structuredClone(s) : undefined; }
+  async listImagingStudiesByPet(petId: string) { return [...this.studies.values()].filter(item => item.petId === petId).map(item => structuredClone(item)); }
+
+  async createImagingSeries(series: ImagingSeries) { this.series.set(series.seriesId, structuredClone(series)); return structuredClone(series); }
+  async findImagingSeriesById(seriesId: string) { const s = this.series.get(seriesId); return s ? structuredClone(s) : undefined; }
+  async listImagingSeriesByStudy(studyId: string) { return [...this.series.values()].filter(item => item.studyId === studyId).map(item => structuredClone(item)); }
+  async updateImagingSeriesStatus(seriesId: string, status: ImagingSeries["status"], quarantineReason?: string | null) {
     const s = this.series.get(seriesId);
     if (!s) return undefined;
-    const updated: ImagingSeries = { ...s, status, quarantineReason: quarantineReason ?? null, updatedAt: new Date().toISOString() };
+    const updated = { ...s, status, ...(quarantineReason !== undefined ? { quarantineReason } : {}), updatedAt: new Date().toISOString() };
     this.series.set(seriesId, updated);
     return structuredClone(updated);
   }
-  async createImagingVolume(volume: ImagingVolume): Promise<ImagingVolume> {
-    this.volumes.set(volume.volumeId, structuredClone(volume));
-    return structuredClone(volume);
-  }
-  async findImagingVolumeById(volumeId: string): Promise<ImagingVolume | undefined> {
-    const v = this.volumes.get(volumeId);
-    return v ? structuredClone(v) : undefined;
-  }
-  async findImagingVolumeBySeriesId(seriesId: string): Promise<ImagingVolume | undefined> {
-    const v = [...this.volumes.values()].find(item => item.seriesId === seriesId);
-    return v ? structuredClone(v) : undefined;
-  }
-  async createImagingSegmentation(segmentation: ImagingSegmentation): Promise<ImagingSegmentation> {
-    this.segmentations.set(segmentation.segmentationId, structuredClone(segmentation));
-    return structuredClone(segmentation);
-  }
-  async findImagingSegmentationById(segmentationId: string): Promise<ImagingSegmentation | undefined> {
-    const seg = this.segmentations.get(segmentationId);
-    return seg ? structuredClone(seg) : undefined;
-  }
-  async listImagingSegmentationsByVolumeId(volumeId: string): Promise<ImagingSegmentation[]> {
-    return [...this.segmentations.values()].filter(seg => seg.volumeId === volumeId).sort((a, b) => b.version - a.version).map(seg => structuredClone(seg));
-  }
-  async createImagingMesh(mesh: ImagingMesh): Promise<ImagingMesh> {
-    this.meshes.set(mesh.meshId, structuredClone(mesh));
-    return structuredClone(mesh);
-  }
-  async listImagingMeshesBySegmentationId(segmentationId: string): Promise<ImagingMesh[]> {
-    return [...this.meshes.values()].filter(m => m.segmentationId === segmentationId).map(m => structuredClone(m));
-  }
-  async createClinicalModel(model: ClinicalModel): Promise<ClinicalModel> {
-    this.clinicalModels.set(model.modelId, structuredClone(model));
-    return structuredClone(model);
-  }
-  async findClinicalModelById(modelId: string): Promise<ClinicalModel | undefined> {
-    const m = this.clinicalModels.get(modelId);
-    return m ? structuredClone(m) : undefined;
-  }
-  async findClinicalModelBySeriesId(seriesId: string): Promise<ClinicalModel | undefined> {
-    const m = [...this.clinicalModels.values()].find(item => item.seriesId === seriesId);
-    return m ? structuredClone(m) : undefined;
-  }
-  async updateClinicalModel(modelId: string, updates: Partial<ClinicalModel>): Promise<ClinicalModel | undefined> {
+
+  async createImagingVolume(volume: ImagingVolume) { this.volumes.set(volume.volumeId, structuredClone(volume)); return structuredClone(volume); }
+  async findImagingVolumeById(volumeId: string) { const v = this.volumes.get(volumeId); return v ? structuredClone(v) : undefined; }
+  async findImagingVolumeBySeriesId(seriesId: string) { const v = [...this.volumes.values()].find(item => item.seriesId === seriesId); return v ? structuredClone(v) : undefined; }
+
+  async createImagingSegmentation(seg: ImagingSegmentation) { this.segmentations.set(seg.segmentationId, structuredClone(seg)); return structuredClone(seg); }
+  async findImagingSegmentationById(segId: string) { const s = this.segmentations.get(segId); return s ? structuredClone(s) : undefined; }
+  async listImagingSegmentationsByVolumeId(volumeId: string) { return [...this.segmentations.values()].filter(item => item.volumeId === volumeId).sort((a, b) => b.version - a.version).map(item => structuredClone(item)); }
+
+  async createImagingMesh(mesh: ImagingMesh) { this.meshes.set(mesh.meshId, structuredClone(mesh)); return structuredClone(mesh); }
+  async listImagingMeshesBySegmentationId(segId: string) { return [...this.meshes.values()].filter(item => item.segmentationId === segId).map(item => structuredClone(item)); }
+
+  async createClinicalModel(model: ClinicalModel) { this.clinicalModels.set(model.modelId, structuredClone(model)); return structuredClone(model); }
+  async findClinicalModelById(modelId: string) { const m = this.clinicalModels.get(modelId); return m ? structuredClone(m) : undefined; }
+  async findClinicalModelBySeriesId(seriesId: string) { const m = [...this.clinicalModels.values()].find(item => item.seriesId === seriesId); return m ? structuredClone(m) : undefined; }
+  async updateClinicalModel(modelId: string, updates: Partial<ClinicalModel>) {
     const m = this.clinicalModels.get(modelId);
     if (!m) return undefined;
     const updated = { ...m, ...updates, updatedAt: new Date().toISOString() };
-    this.clinicalModels.set(modelId, updated as ClinicalModel);
-    return structuredClone(updated as ClinicalModel);
+    this.clinicalModels.set(modelId, updated);
+    return structuredClone(updated);
   }
-  async createSurgicalPlan(plan: SurgicalPlan): Promise<SurgicalPlan> {
-    this.surgicalPlans.set(plan.planId, structuredClone(plan));
-    return structuredClone(plan);
+
+  async createSurgicalPlan(plan: SurgicalPlan) { this.surgicalPlans.set(plan.planId, structuredClone(plan)); return structuredClone(plan); }
+  async findSurgicalPlanById(planId: string) { const p = this.surgicalPlans.get(planId); return p ? structuredClone(p) : undefined; }
+  async listSurgicalPlansByModelId(modelId: string) { return [...this.surgicalPlans.values()].filter(item => item.modelId === modelId).map(item => structuredClone(item)); }
+
+  async createRehearsalSession(session: RehearsalSession) { this.rehearsalSessions.set(session.sessionId, structuredClone(session)); return structuredClone(session); }
+  async findRehearsalSessionById(sessionId: string) { const s = this.rehearsalSessions.get(sessionId); return s ? structuredClone(s) : undefined; }
+  async updateRehearsalSession(sessionId: string, updates: Partial<RehearsalSession>) {
+    const s = this.rehearsalSessions.get(sessionId);
+    if (!s) return undefined;
+    const updated = { ...s, ...updates };
+    this.rehearsalSessions.set(sessionId, updated);
+    return structuredClone(updated);
   }
-  async findSurgicalPlanById(planId: string): Promise<SurgicalPlan | undefined> {
-    const p = this.surgicalPlans.get(planId);
-    return p ? structuredClone(p) : undefined;
+  async listRehearsalSessionsByPlanId(planId: string) { return [...this.rehearsalSessions.values()].filter(item => item.planId === planId).map(item => structuredClone(item)); }
+
+  async createClinicalQualityResult(result: ClinicalQualityResult) { this.qualityResults.set(result.resultId, structuredClone(result)); return structuredClone(result); }
+  async listClinicalQualityResultsByTarget(targetId: string) { return [...this.qualityResults.values()].filter(item => item.targetId === targetId).map(item => structuredClone(item)); }
+
+  async createClinicalCorrection(correction: ClinicalCorrection) { this.corrections.set(correction.correctionId, structuredClone(correction)); return structuredClone(correction); }
+  async listClinicalCorrectionsByTarget(targetId: string) { return [...this.corrections.values()].filter(item => item.targetId === targetId).map(item => structuredClone(item)); }
+
+  async createImagingAuditEvent(event: ImagingAuditEvent) { this.auditEvents.push(structuredClone(event)); return structuredClone(event); }
+  async listImagingAuditEvents(entityId: string) { return this.auditEvents.filter(e => e.entityId === entityId).map(e => structuredClone(e)); }
+
+  // Phase 4 Spatial Assets
+  async createSpatialManifest(manifest: SpatialAssetManifest): Promise<SpatialAssetManifest> {
+    this.spatialManifests.set(manifest.assetId, structuredClone(manifest));
+    return structuredClone(manifest);
   }
-  async listSurgicalPlansByModelId(modelId: string): Promise<SurgicalPlan[]> {
-    return [...this.surgicalPlans.values()].filter(p => p.modelId === modelId).map(p => structuredClone(p));
+
+  async findSpatialManifestById(assetId: string): Promise<SpatialAssetManifest | undefined> {
+    const manifest = this.spatialManifests.get(assetId);
+    return manifest ? structuredClone(manifest) : undefined;
   }
-  async createRehearsalSession(session: RehearsalSession): Promise<RehearsalSession> {
-    this.rehearsalSessions.set(session.sessionId, structuredClone(session));
-    return structuredClone(session);
+
+  async revokeSpatialManifest(assetId: string, revokedAt: string): Promise<SpatialAssetManifest | undefined> {
+    const manifest = this.spatialManifests.get(assetId);
+    if (!manifest) return undefined;
+    const updated: SpatialAssetManifest = {
+      ...manifest,
+      isRevoked: true,
+      revokedAt
+    };
+    this.spatialManifests.set(assetId, updated);
+    return structuredClone(updated);
   }
-  async findRehearsalSessionById(sessionId: string): Promise<RehearsalSession | undefined> {
-    const r = this.rehearsalSessions.get(sessionId);
-    return r ? structuredClone(r) : undefined;
+
+  async listSpatialManifestsByOwner(ownerId: string): Promise<SpatialAssetManifest[]> {
+    return Array.from(this.spatialManifests.values())
+      .filter(m => m.ownerId === ownerId)
+      .map(m => structuredClone(m));
   }
-  async updateRehearsalSession(sessionId: string, updates: Partial<RehearsalSession>): Promise<RehearsalSession | undefined> {
-    const r = this.rehearsalSessions.get(sessionId);
-    if (!r) return undefined;
-    const updated = { ...r, ...updates };
-    this.rehearsalSessions.set(sessionId, updated as RehearsalSession);
-    return structuredClone(updated as RehearsalSession);
-  }
-  async listRehearsalSessionsByPlanId(planId: string): Promise<RehearsalSession[]> {
-    return [...this.rehearsalSessions.values()].filter(r => r.planId === planId).map(r => structuredClone(r));
-  }
-  async createClinicalQualityResult(result: ClinicalQualityResult): Promise<ClinicalQualityResult> {
-    this.qualityResults.set(result.resultId, structuredClone(result));
-    return structuredClone(result);
-  }
-  async listClinicalQualityResultsByTarget(targetId: string): Promise<ClinicalQualityResult[]> {
-    return [...this.qualityResults.values()].filter(q => q.targetId === targetId).map(q => structuredClone(q));
-  }
-  async createClinicalCorrection(correction: ClinicalCorrection): Promise<ClinicalCorrection> {
-    this.corrections.set(correction.correctionId, structuredClone(correction));
-    return structuredClone(correction);
-  }
-  async listClinicalCorrectionsByTarget(targetId: string): Promise<ClinicalCorrection[]> {
-    return [...this.corrections.values()].filter(c => c.targetId === targetId).map(c => structuredClone(c));
-  }
-  async createImagingAuditEvent(event: ImagingAuditEvent): Promise<ImagingAuditEvent> {
-    this.auditEvents.push(structuredClone(event));
-    return structuredClone(event);
-  }
-  async listImagingAuditEvents(entityId: string): Promise<ImagingAuditEvent[]> {
-    return this.auditEvents.filter(e => e.entityId === entityId).map(e => structuredClone(e));
+
+  async listSpatialManifestsByTenant(tenantId: string): Promise<SpatialAssetManifest[]> {
+    return Array.from(this.spatialManifests.values())
+      .filter(m => m.tenantId === tenantId)
+      .map(m => structuredClone(m));
   }
 
   async clear(): Promise<void> {
@@ -283,6 +260,7 @@ export class MemoryPetRepository implements PetRepository {
     this.qualityResults.clear();
     this.corrections.clear();
     this.auditEvents.length = 0;
+    this.spatialManifests.clear();
   }
   async close(): Promise<void> {}
 }

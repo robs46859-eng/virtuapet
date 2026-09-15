@@ -4,13 +4,13 @@ VirtuaPet is a shared pet-care platform for households, veterinary offices, care
 
 ## Current status
 
-Phase 1, Phase 2, and the Phase 3 Clinical Twin Validation release are code-complete. The repository now includes:
+Phase 1, Phase 2, and the Phase 3 Clinical Twin Validation release are code-complete at their documented engineering levels. The Phase 4 foundation is implemented locally but is not operationally closed. The repository now includes:
 
 - canonical pet and consent contracts;
 - OIDC verification support and protected pet-profile API with owner-bound access;
 - time-limited clinic consent creation, listing, and revocation;
 - server-owned clinic organizations, administrators, and staff memberships;
-- three PostgreSQL migrations (`001_phase2_foundation.sql`, `002_phase2_clinic.sql`, `003_phase3_clinical_imaging.sql`) and persistent repository adapters;
+- four PostgreSQL migrations, including Phase 4 spatial-manifest storage, and persistent repository adapters;
 - manual Feline Grimace Scale recording with trained-assessor, clinic-role, and active-consent gates;
 - appointments, recalls, inventory foundations, and consent-controlled clinic messages;
 - source-backed regulation evidence creation, human verification, and fail-closed results;
@@ -30,9 +30,14 @@ Phase 1, Phase 2, and the Phase 3 Clinical Twin Validation release are code-comp
 - capability registry with honest release labels;
 - responsive web dashboard shell;
 - architecture, threat model, validation protocol, and decision records;
-- automated contracts, API, and clinical imaging test suites (25 tests).
+- automated contracts, API, clinical imaging, and spatial-manifest test suites (39 tests at the latest recorded run);
+- a versioned, signed spatial-asset manifest contract with fail-closed signature, checksum, expiry, revocation, entitlement, client-version, unit, axis, laterality, and rollback validation;
+- separate migrator, runtime, and read-only PostgreSQL roles with distinct required credentials;
+- staging/production readiness that rejects an accidental in-memory repository.
 
 Phase 3 is an engineering prototype with passing code tests. Real DICOM pixel processing, measured segmentation and mesh accuracy, representative retrospective validation, prospective multi-center trials, external veterinary review, physical headset validation, and production infrastructure remain gates. This is not an autonomous surgical system or automated primary diagnostic device.
+
+Phase 4 currently has passing local contract/API tests and build checks. Migration 004 has not been applied to the private Azure PostgreSQL server, the deployed API has not been proven to use the PostgreSQL adapter, and backup/restore and tenant-isolation drills have not been performed. See `docs/product/PHASE_4_ACCEPTANCE.md` for the evidence boundary.
 
 ## Run locally
 
@@ -65,4 +70,7 @@ The API starts at `http://127.0.0.1:8080`. Run the web workspace development com
 - [Phase 3 intended use specification](docs/product/PHASE_3_INTENDED_USE.md)
 - [Phase 3 validation protocol](docs/product/PHASE_3_VALIDATION_PROTOCOL.md)
 - [Phase 3 engineering closeout & acceptance](docs/product/PHASE_3_ACCEPTANCE.md)
+- [Phase 4 engineering acceptance](docs/product/PHASE_4_ACCEPTANCE.md)
+- [Phase 4 pilot specification](docs/product/PHASE_4_PILOT_SPECIFICATION.md)
+- [PostgreSQL operations runbook](docs/architecture/POSTGRESQL_OPERATIONS.md)
 - [Engineering handoff](HANDOFF.md)
