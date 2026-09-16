@@ -5,8 +5,8 @@
 | Field | Value |
 |---|---|
 | Document ID | VP-ARCH-001 |
-| Version | 1.0 |
-| Status | Target architecture with Phase 3 clinical twin validation baseline |
+| Version | 2.0 |
+| Status | Target architecture with integration, marketplace, and clinical-twin validation baselines |
 | System | VirtuaPet commercial platform |
 | Owners | Architecture, security, product, clinical safety, and operations |
 
@@ -44,7 +44,7 @@ Households       Clinics          Caregivers       Travel partners
  | VetOS     | Rules        | Imaging      | Events | Audit       |
  -----------------------------------------------------------------
               |        |        |        |        |
-          PIMS/PACS  Stripe  Shopify  Azure AI  Partner APIs
+          PIMS/PACS  Stripe  Labs  Azure AI  Partner APIs
 
 SugarDaddy.lgbt remains outside the commercial system boundary.
 ```
@@ -53,11 +53,11 @@ SugarDaddy.lgbt remains outside the commercial system boundary.
 
 ### 4.1 Consumer dashboard
 
-The dashboard provides Overview, Pet Profile, Health, Care, PawPath, Judy travel, Pawsome3D assets, GibiWorld experiences, Shop, permissions, notifications, and privacy controls. Unavailable features show their release state rather than fabricated content.
+The dashboard provides Overview, Pet Profile, Health, Care, PawPath, Judy travel, Pawsome3D assets, GibiWorld experiences, Care Booking, permissions, notifications, and privacy controls. Day care and overnight services use a dedicated marketplace and booking domain. The former retail store is not reused. Unavailable features show their release state rather than fabricated content.
 
 ### 4.2 VetOS
 
-VetOS provides a clinic command center, patient search and matching, scheduling, communications, recalls, payment links, inventory foundations, manual FGS, regulation evidence, imaging cases, clinical-twin review, rehearsal sessions, staff permissions, and audit evidence.
+VetOS provides a clinic command center, patient search and matching, scheduling, communications, recalls, payment links, inventory foundations, a veterinary supply-and-equipment marketplace, manual FGS, regulation evidence, imaging cases, anatomical-twin review, surgical planning, rehearsal sessions, patient-specific instrument workflows, staff permissions, and audit evidence.
 
 ### 4.3 GibiWorld
 
@@ -72,12 +72,15 @@ GibiWorld remains the specialized Unity and AR runtime. It consumes sanitized, s
 | Consent | Time-limited purpose-bound grants | Grants, scopes, revocations |
 | VetOS | Clinic workflows | Appointments, clinic tasks, communications, inventory projections |
 | Health Vault | Documents and normalized clinical summaries | Encrypted source documents and metadata |
-| Imaging | DICOM ingestion and derived clinical twins | Studies, series, segmentations, measurements, approvals |
+| Imaging | DICOM ingestion and patient-specific anatomical twins | Studies, series, segmentations, measurements, approvals |
 | Twin Asset Registry | Consumer and clinical 3D versions | Manifests, hashes, lineage, entitlements, rollback pointers |
 | Rules | Address-to-jurisdiction and source evidence | Jurisdictions, rules, citations, freshness, conflicts |
 | Travel | Trips, custody, welfare telemetry, partner settlement | Trip plans, events, incidents, settlement records |
 | Device | Robot registration, policy, telemetry, updates | Devices, missions, safety events, firmware evidence |
-| Commerce | Catalog synchronization and order references | Product mappings and non-card order references |
+| Vet Procurement Marketplace | Clinic-only supplies and equipment sourcing | Vendors, catalog offers, quotes, purchase orders, receiving, warranties, recalls |
+| Care Services Marketplace | Consumer day care and overnight discovery and booking | Provider profiles, pet eligibility, availability, bookings, care plans, custody events, reviews |
+| Marketplace Trust | Provider onboarding and verification | Business identities, licenses, insurance, screening evidence, suspensions |
+| Marketplace Settlement | Stripe-hosted collection, marketplace ledger, payouts, refunds, disputes | Payment references, platform fees, provider balances, payout state, reconciliation |
 | Billing and entitlement | Layer8 and Stripe subscription boundary | Customers, plans, entitlements, webhook ledger |
 | Audit | Append-only security and business evidence | Correlated immutable events |
 
@@ -164,26 +167,36 @@ Consumers are idempotent. An outbox is written in the same transaction as the ow
 
 Retention is defined per record class and jurisdiction. Deletion uses a workflow that accounts for backups, legal holds, clinical retention obligations, event tombstones, and derived assets.
 
-## 12. DICOM and clinical digital-twin architecture
+## 12. DICOM, anatomical twin, and clinical digital-twin architecture
 
 ### 12.1 Service boundary
 
-The imaging service is isolated from consumer asset generation. It accepts approved DICOM transfer, validates the complete series, quarantines files, and records source hashes. It never silently combines patients, laterality, studies, or incompatible spacing.
+The imaging service is isolated from consumer likeness and decorative 3D generation. It accepts approved DICOM transfer, validates the complete series, quarantines files, and records source hashes. It never silently combines patients, laterality, studies, or incompatible spacing.
+
+The anatomical twin is the geometry-and-provenance layer: source-linked structures, landmarks, measurements, uncertainty, and coordinate frames derived from DICOM. The clinical digital twin is the broader longitudinal case model that binds an approved anatomical-twin version to PIMS encounters, diagnoses, procedures, medications, allergies, vitals, laboratory results, pathology, rehabilitation, outcomes, and time-stamped clinician observations. A PIMS or lab update may add context or trigger review; it must never silently deform approved anatomy.
 
 ### 12.2 Derived model lineage
 
 ```text
-Study -> Series -> Volume -> Segmentation -> Mesh -> Clinical Model
-      -> Plan -> Rehearsal Session -> Approval or Rejection
+DICOM Study -> Series -> Volume -> Segmentation -> Anatomical Twin
+    + PIMS encounters + laboratory results + longitudinal health timeline
+      -> Clinical Digital Twin Snapshot -> Surgical Plan
+      -> Rehearsal Session -> PSI Design Candidate -> Approval or Rejection
 ```
 
-Every node records parent IDs, tool and model version, parameters, operator, timestamp, units, coordinate frame, quality results, and approval state. Derived artifacts are immutable. Corrections create a new version.
+Every node records parent IDs, tool and model version, parameters, operator, timestamp, units, coordinate frame, quality results, and approval state. Every clinical snapshot records the exact source versions and effective time used. Derived artifacts are immutable. Corrections create a new version. PIMS and lab records remain owned by their source systems; VirtuaPet stores normalized, provenance-bearing projections and references rather than claiming to replace the PIMS or laboratory information system.
 
 ### 12.3 Release state machine
 
 `received -> quarantined -> validated -> reconstructed -> segmented -> clinician_review -> approved -> packaged -> rehearsed -> archived`
 
 Failure, rejection, or supersession can occur at defined transitions. Only `approved` models may be packaged for rehearsal. Any patient, laterality, unit, coordinate, or source mismatch is terminal until corrected through a new traceable version.
+
+A patient-specific instrument adds a separate controlled state machine:
+
+`plan_approved -> psi_draft -> engineering_review -> clinical_review -> manufacturing_validation -> released_for_manufacture -> received_and_inspected -> used_or_discarded`
+
+PSI output is blocked unless the anatomical twin and surgical plan are approved, the manufacturing process and material are qualified, dimensional inspection passes, sterilization and biocompatibility responsibilities are assigned, and the surgeon signs the final design. A 3D visualization mesh can never be promoted into a manufacturing master.
 
 ### 12.4 Intended Use Definition and Constraints
 
@@ -243,7 +256,34 @@ Travel uses trip, vehicle, handler, pet, crate or cabin, route, welfare plan, cu
 
 ## 18. Commerce and payment boundaries
 
-Stripe payment data stays within Stripe-hosted collection and the existing signed webhook architecture. VirtuaPet stores provider references, state, totals, and entitlement results, not raw card data. Shopify remains the commerce catalog and fulfillment boundary where used. Webhooks are signature-verified, idempotent, replay-protected, ordered through a ledger, and reconciled.
+Stripe payment data stays within Stripe-hosted collection and the existing Layer8-owned signed webhook architecture. VirtuaPet stores provider references, state, totals, platform fees, provider balances, payout state, and entitlement results, not raw card data. Webhooks are signature-verified, idempotent, replay-protected, ordered through a double-entry marketplace ledger, and reconciled.
+
+The two marketplaces are first-party VirtuaPet domains and do not reuse the former retail store, its catalog, its orders, or its fulfillment model. Shopify is excluded from both marketplace architectures. Veterinary procurement and consumer care bookings have separate catalogs, sellers/providers, permissions, policies, ledgers, search indexes, order/booking state machines, disputes, and audit trails. Neither marketplace may share restricted clinical details with a vendor or care provider unless a purpose-bound grant requires the minimum data.
+
+### 18.1 Veterinary procurement marketplace
+
+The VetOS marketplace lets verified clinics purchase supplies, medications where legally supported, consumables, diagnostic devices, surgical equipment, furniture, service contracts, replacement parts, and approved implant or PSI manufacturing services. It is procurement software, not a consumer storefront.
+
+Core records are `vendor`, `vendor_credential`, `catalog_item`, `regulated_item_class`, `offer`, `contract_price`, `quote`, `purchase_request`, `approval`, `purchase_order`, `shipment`, `receipt`, `lot`, `serial_number`, `warranty`, `service_record`, `recall_notice`, `return`, and `dispute`. Catalog items use normalized manufacturer and distributor identifiers, units of measure, pack sizes, compatible devices, storage conditions, lot/serial requirements, and safety documents. Multiple vendor offers may map to one canonical item without merging vendor-specific price, availability, or contract terms.
+
+Purchase controls are server-owned: clinic role, location, formulary, budget, approval threshold, controlled-item status, vendor eligibility, shipping jurisdiction, and conflict-of-interest policy. AI may compare offers and draft a purchase request; it cannot place an order, substitute a regulated item, or exceed a spending threshold without the required human approvals. Receiving posts immutable inventory ledger events and records lot, serial, expiration, condition, quantity variance, and receiver. Recall matching uses manufacturer, item, lot, and serial data and never waits for a marketing workflow.
+
+### 18.2 Consumer day-care and overnight marketplace
+
+The consumer care marketplace lets guardians discover and book verified day-care and overnight providers. Provider types may include licensed facilities, insured home-boarders where permitted, and approved caregivers. Search and booking are separate from the veterinary clinic schedule and from retail commerce.
+
+Core records are `care_provider`, `service_location`, `verification`, `service`, `rate_plan`, `availability_slot`, `capacity_bucket`, `pet_eligibility_policy`, `booking_hold`, `booking`, `care_plan`, `consent_grant`, `custody_event`, `check_in`, `check_out`, `incident`, `message`, `review`, `refund`, `dispute`, and `payout`. Exact provider and pet locations are disclosed only when necessary for a confirmed service. Search uses coarse geography and privacy-safe availability.
+
+Booking uses a two-phase hold and confirmation flow. A hold atomically reserves provider capacity for a short period; payment authorization and required records are checked; provider acceptance is recorded when the service is not instant-book; then a confirmed booking mints time-limited care scopes. Required health proofs use the least disclosure possible, such as a signed vaccination-status result rather than the full medical record. The care plan covers feeding, medication instructions, emergency contacts, veterinarian preference, behavior, authorized pickups, and escalation. Custody begins at check-in and ends at verified checkout. Incidents create a protected record and human escalation; ratings cannot suppress safety reports.
+
+### 18.3 Marketplace trust, search, and settlement
+
+- Vendor and care-provider onboarding is versioned, reviewable, and revocable. Required evidence depends on provider type and jurisdiction.
+- Search ranking separates relevance, availability, verified safety facts, price, and sponsored placement. Sponsorship is labeled and cannot override safety or eligibility filters.
+- Reviews require a completed transaction and support moderation, appeal, fraud detection, and immutable original evidence.
+- Marketplace money uses provider-connected accounts, explicit platform fees, delayed or policy-based payouts, refunds, chargebacks, and reconciliation. VirtuaPet does not hold raw card data.
+- Procurement purchase orders and care bookings use different ledger accounts and never share provider balances.
+- Marketplace events flow through the outbox and include no raw payment credentials or unnecessary clinical data.
 
 ## 19. Deployment architecture
 
@@ -294,9 +334,10 @@ Alerts identify owner, severity, customer impact, runbook, and escalation. Analy
 | Repository | Persistence, transaction, concurrency, row isolation |
 | API | Authentication, authorization, validation, idempotency, error safety |
 | Event | Outbox, duplicate, ordering assumption, dead letter, replay |
-| Integration | Identity, Layer8, Stripe, PIMS, PACS, Shopify, source adapters |
+| Integration | Identity, Layer8, Stripe, PIMS, PACS, labs, vendors, care providers, source adapters |
 | Security | Tenant escape, forged token, injection, malicious upload, signed asset |
 | Clinical | Dataset integrity, accuracy, subgroup, correction, traceability |
+| Marketplace | Capacity and inventory races, approval bypass, vendor/provider suspension, refunds, payouts, recalls, custody, dispute isolation |
 | Device | Simulation, hardware-in-loop, network loss, sensor fault, safe stop |
 | User | Accessibility, browser, mobile, clinic workflow, rehearsal usability |
 | Recovery | Backup restore, regional failover, rollback, key rotation |

@@ -5,15 +5,18 @@ import { IntegrationContextError, requireIntegrationContext } from "./context.js
 import { createLayer8PolicyClient, layer8ConfigFromEnvironment, Layer8IntegrationError } from "./layer8.js";
 import { createPawsome3DPreviewAdapter, SpatialIntegrationError } from "./spatial.js";
 import { createPawPathAdapter, nearbyRequestSchema, PawPathIntegrationError } from "./pawpath.js";
+import type { IdentityLinkService } from "./identity-links.js";
 
 export interface IntegrationServices {
   layer8: ReturnType<typeof createLayer8PolicyClient>;
   spatial: ReturnType<typeof createPawsome3DPreviewAdapter>;
   pawpath: ReturnType<typeof createPawPathAdapter>;
 }
-export function integrationServicesFromEnvironment(): IntegrationServices {
+export function integrationServicesFromEnvironment(identityLinks?: IdentityLinkService): IntegrationServices {
   return {
-    layer8: createLayer8PolicyClient(layer8ConfigFromEnvironment()),
+    layer8: createLayer8PolicyClient(layer8ConfigFromEnvironment(), identityLinks ? {
+      resolveIdentityProof: context => identityLinks.resolveProof(context)
+    } : {}),
     // No blanket service token or unverified OIDC forwarding. The default
     // server intentionally has no identity-link resolver: enablement alone
     // cannot authorize private provider records.

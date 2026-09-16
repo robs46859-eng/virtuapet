@@ -20,7 +20,17 @@ Subagents implemented tenant security, Layer8 signed-policy consumption, and Paw
 - Six independent integration CI jobs plus real PostgreSQL isolation run alongside full regression CI. Image publication now waits for successful main-push CI and tags the exact tested commit. Azure rollout remains a separate action; no mutable staging tag is updated.
 - Judy, Stelar and Shopify remain unconnected. Stripe ownership stays with Layer8; SugarDaddy.lgbt data stays outside commercial integrations.
 
-Next: confirm Layer8's contract and implement revocable provider identity/consent links; add audit/rate limits; activate with two test tenants in an isolated staging revision. Then complete legacy-table transaction migration/RLS, live tenant tests and backup restore. Do not turn on flags and call this connected without the explicit success/denial/expiry tests in the rollout document.
+The earlier next step—confirming Layer8's contract and implementing revocable Layer8 identity links—is superseded by the 2026-09-16 continuation below. Pawsome3D and PawPath still require their own provider-side link contracts. Live activation still requires the explicit success, denial, expiry, revocation, and two-tenant staging tests in the rollout document.
+
+## Layer8 verified-link and architecture continuation — 2026-09-16
+
+The actual `robs46859-eng/layer8` codebase now supplies the provider side of the stable `virtuapet.layer8.policy.v1` contract. VirtuaPet now has a five-minute one-time challenge lifecycle, pinned ES256 proof verification, AES-256-GCM proof storage, revocation, metadata-only listing, forced tenant/user RLS in migration 005, tenant-specific Layer8 credentials, and a real Python-to-Node loopback interoperability verifier. Provider access remains disabled and no cloud secrets, Stripe plans, entitlements, or production revisions were changed.
+
+Local VirtuaPet evidence: 276 tests passed, typecheck passed, and the production build passed. Layer8 evidence: 115 tests and Ruff passed. A PostgreSQL identity-link verifier and CI job are present, but this host cannot start a fresh PostgreSQL process because its shared-memory call is blocked; GitHub CI is the next real PostgreSQL execution gate. Migration 005 is not applied to Azure.
+
+Architecture v6 adds two separate marketplaces: clinic procurement for veterinary supplies/equipment and consumer booking for day care/overnight services. Neither reuses the retail store or Shopify. The clinical architecture now distinguishes the DICOM-derived anatomical twin from a longitudinal clinical digital twin enhanced by PIMS, labs, and health history, with separate surgical-planning, rehearsal, and PSI design/manufacturing gates. These are target/development specifications, not deployed claims.
+
+Next operational sequence: run CI including migration 005 and forced-RLS verifier; provision operator-managed signing and encryption keys; create explicit tenant mappings and dedicated `virtuapet:policy` keys; configure Redis and both services in isolated staging; run two-tenant allowed/denied/expiry/revocation drills; then promote immutable images only after rollback and observability checks.
 
 The authoritative closeouts are:
 - Phase 1: `docs/product/PHASE_1_ACCEPTANCE.md`

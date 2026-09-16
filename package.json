@@ -12,6 +12,8 @@
     "migrate": "node scripts/migrate.mjs",
     "test:integrations": "npm run build --workspace=@virtuapet/contracts && npm run test --workspace=@virtuapet/api -- src/integrations",
     "verify:integration-isolation": "node scripts/verify-integration-isolation.mjs",
+    "verify:identity-links": "node scripts/verify-identity-links.mjs",
+    "verify:layer8-interoperability": "node scripts/verify-layer8-interoperability.mjs",
     "test": "npm run build --workspace=@virtuapet/contracts && npm run test --workspaces --if-present",
     "typecheck": "npm run build --workspace=@virtuapet/contracts && npm run typecheck --workspaces --if-present"
   },

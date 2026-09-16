@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [context, transaction, layer8, spatial, pawpath, routes]
+        suite: [context, transaction, layer8, spatial, pawpath, routes, bootstrap, identity-links, identity-link-store, identity-link-routes]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -39,6 +39,7 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/virtuapet_integrations_test
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/virtuapet_integrations_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -48,6 +49,8 @@ jobs:
       - run: npm ci
       - run: npm run build --workspace=@virtuapet/contracts && npm run build --workspace=@virtuapet/api
       - run: npm run verify:integration-isolation
+      - run: npm run migrate
+      - run: npm run verify:identity-links
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15

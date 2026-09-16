@@ -4,8 +4,8 @@ import { createLocalJWKSet, jwtVerify, type JSONWebKeySet } from "jose";
 import { z } from "zod";
 import { integrationContextSchema, type IntegrationContext } from "./context.js";
 
-/** A proposed protocol, not evidence that an existing Layer8 deployment implements it. */
-export const LAYER8_POLICY_PROTOCOL = "virtuapet.layer8.policy.v1.proposed" as const;
+/** Shared signed-policy protocol; configuration alone does not establish deployed readiness. */
+export const LAYER8_POLICY_PROTOCOL = "virtuapet.layer8.policy.v1" as const;
 const tokenType = "vp-layer8-policy+jwt";
 const boundedText = z.string().min(1).max(256)
   .refine(value => value === value.trim() && !/[\u0000-\u001f\u007f]/.test(value), "noncanonical text");
@@ -20,13 +20,33 @@ export type Layer8PolicyRequest = z.input<typeof layer8PolicyRequestSchema>;
 export interface Layer8PolicyConfig {
   enabled?: boolean;
   endpoint?: string;
-  serviceToken?: string;
+  /** VirtuaPet tenant UUID to dedicated Layer8 API key with virtuapet:policy scope. */
+  tenantServiceTokens?: Record<string, string>;
   issuer?: string;
   audience?: string;
   publicJwks?: JSONWebKeySet;
   timeoutMs?: number;
   maxResponseBytes?: number;
 }
+
+export interface Layer8IdentityProof {
+  proofToken: string;
+}
+
+/** Resolves only an active, server-verified account link belonging to this context. */
+export type Layer8IdentityProofResolver = (context: IntegrationContext) => Promise<Layer8IdentityProof | undefined>;
+
+export interface Layer8PolicyDependencies {
+  fetch?: typeof globalThis.fetch;
+  now?: () => Date;
+  resolveIdentityProof?: Layer8IdentityProofResolver;
+}
+
+const tenantServiceTokensSchema = z.record(
+  z.string().uuid().refine(value => value === value.toLowerCase(), "noncanonical tenant"),
+  z.string().regex(/^[\x21-\x7e]{16,4096}$/)
+).refine(value => Object.keys(value).length > 0, "tenant credentials required");
+const identityProofTokenSchema = z.string().max(15000).regex(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
 
 export class Layer8IntegrationError extends Error {
   constructor(readonly code: string, readonly httpStatus: 400 | 403 | 503 = 503) {
@@ -74,7 +94,7 @@ function validConfiguration(config: Layer8PolicyConfig): boolean {
         endpoint.hash || (endpoint.port && endpoint.port !== "443") ||
         isIP(host.replace(/^\[|\]$/g, "")) || !host.includes(".") || host.endsWith(".") ||
         ["localhost", ".localhost", ".local", ".internal", ".test", ".invalid"].some(suffix => host === suffix || host.endsWith(suffix))) return false;
-    if (!config.serviceToken || !/^[\x21-\x7e]{16,4096}$/.test(config.serviceToken)) return false;
+    if (!tenantServiceTokensSchema.safeParse(config.tenantServiceTokens).success) return false;
     if (!boundedText.safeParse(config.issuer).success || !boundedText.safeParse(config.audience).success) return false;
     if (!config.publicJwks || !Array.isArray(config.publicJwks.keys) || config.publicJwks.keys.length < 1 ||
         config.publicJwks.keys.length > 8) return false;
@@ -135,11 +155,16 @@ async function boundedJson(response: Response, maxBytes: number, signal: AbortSi
 
 export function layer8ConfigFromEnvironment(env: NodeJS.ProcessEnv = process.env): Layer8PolicyConfig {
   let publicJwks: JSONWebKeySet | undefined;
+  let tenantServiceTokens: Record<string, string> | undefined;
   try { publicJwks = JSON.parse(env.LAYER8_POLICY_PUBLIC_JWKS ?? "null") ?? undefined; } catch { /* Invalid config remains fail-closed. */ }
+  try {
+    const parsed = tenantServiceTokensSchema.safeParse(JSON.parse(env.LAYER8_POLICY_CREDENTIALS_JSON ?? "null"));
+    if (parsed.success) tenantServiceTokens = parsed.data;
+  } catch { /* Invalid credentials remain fail-closed; there is no global-token fallback. */ }
   return {
     enabled: env.LAYER8_POLICY_ENABLED === "true",
     ...(env.LAYER8_POLICY_ENDPOINT ? { endpoint: env.LAYER8_POLICY_ENDPOINT } : {}),
-    ...(env.LAYER8_POLICY_SERVICE_TOKEN ? { serviceToken: env.LAYER8_POLICY_SERVICE_TOKEN } : {}),
+    ...(tenantServiceTokens ? { tenantServiceTokens } : {}),
     ...(env.LAYER8_POLICY_ISSUER ? { issuer: env.LAYER8_POLICY_ISSUER } : {}),
     ...(env.LAYER8_POLICY_AUDIENCE ? { audience: env.LAYER8_POLICY_AUDIENCE } : {}),
     ...(publicJwks ? { publicJwks } : {})
@@ -148,11 +173,12 @@ export function layer8ConfigFromEnvironment(env: NodeJS.ProcessEnv = process.env
 
 export function createLayer8PolicyClient(
   suppliedConfig: Layer8PolicyConfig = {},
-  dependencies: { fetch?: typeof globalThis.fetch; now?: () => Date } = {}
+  dependencies: Layer8PolicyDependencies = {}
 ) {
   // Snapshot configuration: an external mutation must not replace a trusted key/endpoint in flight.
   const config = structuredClone(suppliedConfig);
-  const configured = validConfiguration(config);
+  const resolveIdentityProof = dependencies.resolveIdentityProof;
+  const configured = validConfiguration(config) && typeof resolveIdentityProof === "function";
   const enabled = config.enabled === true;
   const fetcher = dependencies.fetch ?? globalThis.fetch;
   const clock = dependencies.now ?? (() => new Date());
@@ -166,19 +192,45 @@ export function createLayer8PolicyClient(
       const validContext = integrationContextSchema.safeParse(context);
       const validRequest = layer8PolicyRequestSchema.safeParse(request);
       if (!validContext.success || !validRequest.success) throw new Layer8IntegrationError("layer8_invalid_request", 400);
+      const serviceToken = Object.hasOwn(config.tenantServiceTokens!, validContext.data.tenantId)
+        ? config.tenantServiceTokens![validContext.data.tenantId] : undefined;
+      if (!serviceToken) throw new Layer8IntegrationError("layer8_tenant_unconfigured");
       const requestId = randomUUID();
       const input = { protocol: LAYER8_POLICY_PROTOCOL, requestId,
         subject: validContext.data.userId, tenantId: validContext.data.tenantId,
         correlationId: validContext.data.correlationId, ...validRequest.data };
       const controller = new AbortController();
+      const deadline = performance.now() + (config.timeoutMs ?? 5000);
+      const requireWithinDeadline = () => {
+        if (controller.signal.aborted || performance.now() >= deadline) throw new Layer8IntegrationError("layer8_timeout");
+      };
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
+        // Start the deadline before lookup, including resolvers that ignore cancellation.
+        const timeout = new Promise<never>((_, reject) => {
+          timer = setTimeout(() => {
+            controller.abort();
+            reject(new Layer8IntegrationError("layer8_timeout"));
+          }, config.timeoutMs ?? 5000);
+        });
         const operation = async () => {
+          let proof: Layer8IdentityProof | undefined;
+          try {
+            proof = await resolveIdentityProof!(structuredClone(validContext.data));
+          } catch {
+            requireWithinDeadline();
+            throw new Layer8IntegrationError("layer8_identity_unavailable");
+          }
+          // A lookup resolving after timeout must never initiate an outbound request.
+          requireWithinDeadline();
+          const identityProof = identityProofTokenSchema.safeParse(proof?.proofToken);
+          if (!identityProof.success) throw new Layer8IntegrationError("layer8_identity_required", 403);
           const response = await fetcher(config.endpoint!, {
             method: "POST", redirect: "error", signal: controller.signal,
-            headers: { authorization: `Bearer ${config.serviceToken}`, "content-type": "application/json", accept: "application/json" },
-            body: JSON.stringify(input)
+            headers: { authorization: `Bearer ${serviceToken}`, "content-type": "application/json", accept: "application/json" },
+            body: JSON.stringify({ ...input, identityProof: identityProof.data })
           });
+          requireWithinDeadline();
           const envelope = z.object({ decisionToken: z.string().min(1).max(15000) }).strict()
             .parse(await boundedJson(response, config.maxResponseBytes ?? 16384, controller.signal));
           const now = clock();
@@ -204,16 +256,12 @@ export function createLayer8PolicyClient(
               !input.requiredEntitlements.every(value => decision.entitlements.includes(value))) {
             throw new Layer8IntegrationError("layer8_denied", 403);
           }
+          requireWithinDeadline();
           return { decisionId: decision.jti, policyVersion: decision.policyVersion, outcome: "allow" as const,
             entitlements: decision.entitlements, expiresAt: new Date(decision.exp * 1000).toISOString(),
             correlationId: decision.correlationId };
         };
-        return await Promise.race([operation(), new Promise<never>((_, reject) => {
-          timer = setTimeout(() => {
-            controller.abort();
-            reject(new Layer8IntegrationError("layer8_timeout"));
-          }, config.timeoutMs ?? 5000);
-        })]);
+        return await Promise.race([operation(), timeout]);
       } catch (error) {
         if (error instanceof Layer8IntegrationError) throw error;
         // Never forward provider errors, tokens, response bodies, or endpoint details to the caller.

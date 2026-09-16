@@ -16,6 +16,8 @@ import { verifierFromEnvironment, type Principal, type PrincipalVerifier } from 
 import { MemoryPetRepository, type PetRepository } from "./repository.js";
 import { registerImagingRoutes } from "./imaging/routes.js";
 import { integrationServicesFromEnvironment, registerIntegrationRoutes, type IntegrationServices } from "./integrations/routes.js";
+import type { IdentityLinkService } from "./integrations/identity-links.js";
+import { registerIdentityLinkRoutes } from "./integrations/identity-link-routes.js";
 
 declare module "fastify" { interface FastifyRequest { principal?: Principal } }
 
@@ -27,6 +29,7 @@ export interface AppOptions {
   publicApiBaseUrl?: string;
   corsAllowedOrigins?: string[];
   integrations?: IntegrationServices;
+  identityLinks?: IdentityLinkService;
 }
 const protectedPrefixes = ["/v1/pets", "/v1/regulations", "/v1/organizations", "/v1/imaging", "/v1/integrations"];
 
@@ -55,7 +58,9 @@ export async function buildApp(options: AppOptions = {}) {
   if (!publicApiBaseUrl) throw new Error("PUBLIC_API_BASE_URL is required in production");
   const corsAllowedOrigins = options.corsAllowedOrigins ?? (process.env.CORS_ALLOWED_ORIGINS ?? "").split(",").map(value => value.trim()).filter(Boolean);
   if (environment === "production" && corsAllowedOrigins.length === 0) throw new Error("CORS_ALLOWED_ORIGINS is required in production");
-  const app = Fastify({ logger: environment !== "test", genReqId: () => randomUUID() });
+  const app = Fastify({ logger: environment === "test" ? false : {
+    redact: ["req.headers.authorization", "req.headers.cookie", "req.body.proofToken", "req.body.identityProof"]
+  }, genReqId: () => randomUUID() });
   await app.register(helmet);
   await app.register(cors, { origin: environment === "development" ? true : corsAllowedOrigins });
   app.addHook("onClose", async () => repository.close());
@@ -65,6 +70,9 @@ export async function buildApp(options: AppOptions = {}) {
     const oidcReady = Boolean(process.env.OIDC_ISSUER && process.env.OIDC_AUDIENCE && process.env.OIDC_JWKS_URL);
     const devReady = environment === "development" && Boolean(process.env.DEV_API_TOKEN);
     if (!options.verifyPrincipal && !oidcReady && !devReady) return reply.code(503).send({ status: "not_ready", missing: ["OIDC configuration"] });
+    if (process.env.LAYER8_IDENTITY_LINKS_ENABLED === "true" && !options.identityLinks) {
+      return reply.code(503).send({ status: "not_ready", missing: ["Layer8 identity-link configuration"] });
+    }
     try {
       await repository.checkHealth();
     } catch {
@@ -186,6 +194,7 @@ export async function buildApp(options: AppOptions = {}) {
   app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/messages",async(request,reply)=>{ const principal=request.principal!; const member=await repository.findMembership(request.params.organizationId,principal.userId); if(!member)return reply.code(403).send({error:"clinic_membership_required"}); const parsed=createClinicMessageSchema.safeParse(request.body); if(!parsed.success)return reply.code(400).send({error:"invalid_message",issues:parsed.error.issues}); if(!await hasActiveClinicGrant(repository,parsed.data.petId,{...principal,organizationId:request.params.organizationId},"pet.profile.read"))return reply.code(403).send({error:"active_consent_required"}); const item:ClinicMessage=clinicMessageSchema.parse({...parsed.data,messageId:randomUUID(),clinicId:request.params.organizationId,authorUserId:principal.userId,createdAt:new Date().toISOString()}); return reply.code(201).send(await repository.createClinicMessage(item)); });
 
   await registerImagingRoutes(app, repository, { signingKey: clinicalSigningKey, publicApiBaseUrl });
-  await registerIntegrationRoutes(app, repository, options.integrations ?? integrationServicesFromEnvironment());
+  await registerIdentityLinkRoutes(app, repository, options.identityLinks);
+  await registerIntegrationRoutes(app, repository, options.integrations ?? integrationServicesFromEnvironment(options.identityLinks));
   return app;
 }

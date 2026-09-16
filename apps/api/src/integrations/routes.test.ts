@@ -41,7 +41,7 @@ describe("integration routes", () => {
     expect(result.statusCode).toBe(200);
     expect(result.headers["cache-control"]).toBe("no-store");
     expect(result.json()).toMatchObject({ liveVerified: false, providers: { Layer8: { enabled: false }, Judy: { state: "not_connected" } } });
-    expect(result.body).not.toMatch(/bearerToken|serviceToken|publicJwks/);
+    expect(result.body).not.toMatch(/bearerToken|serviceToken|tenantServiceTokens|identityProof|publicJwks/);
   });
   it("does not call a provider if Layer8 is disabled or denies", async () => {
     const { integrations } = await setup();
