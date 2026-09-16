@@ -10,7 +10,7 @@ Phase 1, Phase 2, and the Phase 3 Clinical Twin Validation release are code-comp
 - OIDC verification support and protected pet-profile API with owner-bound access;
 - time-limited clinic consent creation, listing, and revocation;
 - server-owned clinic organizations, administrators, and staff memberships;
-- four PostgreSQL migrations, including Phase 4 spatial-manifest storage, and persistent repository adapters;
+- five PostgreSQL migrations, including Phase 4 spatial-manifest storage and the default-off verified-identity-link tables, plus persistent repository adapters;
 - manual Feline Grimace Scale recording with trained-assessor, clinic-role, and active-consent gates;
 - appointments, recalls, inventory foundations, and consent-controlled clinic messages;
 - source-backed regulation evidence creation, human verification, and fail-closed results;
@@ -33,7 +33,7 @@ Phase 1, Phase 2, and the Phase 3 Clinical Twin Validation release are code-comp
 - automated contracts, API, imaging, spatial, and integration suites (276 tests at the latest local run);
 - default-off Layer8 signed policy, verified short-lived account links, Pawsome3D preview, and PawPath read adapters, plus server-only GibiWorld preflight;
 - server-owned integration membership checks, transaction-local database context, and nine real local PostgreSQL isolation checks;
-- six parallel integration CI jobs and CI-gated immutable API image publication;
+- ten focused integration-contract CI jobs, a real PostgreSQL isolation job, full verification, and CI-gated immutable API image publication;
 - a versioned, signed spatial-asset manifest contract with fail-closed signature, checksum, expiry, revocation, entitlement, client-version, unit, axis, laterality, and rollback validation;
 - separate migrator, runtime, and read-only PostgreSQL roles with distinct required credentials;
 - staging/production readiness that rejects an accidental in-memory repository.
@@ -42,7 +42,7 @@ Phase 3 is an engineering prototype with passing code tests. Real DICOM pixel pr
 
 Phase 4 has passing local tests and build checks. Azure revision `virtuapet-staging-api--a9f4854-http` receives 100% of API traffic, with migrations 001–004 and HTTP health/readiness/startup probes. On 2026-09-15, `api.virtuapet.com` was verified bound with TLS; health/readiness returned 200 and an anonymous protected request returned 401. The Hostinger website returned 200. The first readiness attempt timed out before a successful retry; its cause is unconfirmed. Backup restore, legacy-table RLS, authenticated end-user workflows, and live Azure tenant-isolation drills remain open.
 
-The integration slice is **tested code, not a live provider connection or deployed feature**. The real Layer8 repository now implements the signed protocol, and VirtuaPet implements consented five-minute account links, encrypted proof storage, revocation, tenant-specific service credentials, and strict response verification. The connection remains default-off until managed keys, mappings, scoped credentials, Redis, migration 005, and staging gates are configured. Pawsome3D and PawPath still need their own provider-owned authorization/consent links. GibiWorld has server preflight only; Judy and Stelar are not connected.
+The integration slice is **tested code, not a live provider connection or deployed feature**. The real Layer8 repository now implements the signed protocol, and VirtuaPet implements consented five-minute account links, encrypted proof storage, revocation, tenant-specific service credentials, and strict response verification. GitHub CI passed migration 005 and its forced-RLS verifier for commit `c5636bf`; Azure still runs the older `a9f4854` image, has only migrations 001–004 recorded by the last migration job, and has none of the Layer8 integration variables or secrets configured. The connection therefore remains default-off until migration 005, managed keys, explicit mappings, tenant-scoped credentials, Redis, and staging gates are completed. Pawsome3D and PawPath still need their own provider-owned authorization/consent links. GibiWorld has server preflight only; Judy and Stelar are not connected.
 
 The target product architecture now includes two first-party marketplaces: a VetOS procurement marketplace for veterinary supplies and equipment, and a consumer marketplace for day care and overnight care. They do not reuse the former retail store and do not use Shopify. The clinical 3D architecture creates a DICOM-derived anatomical twin, enhances a versioned digital twin with PIMS, laboratory, and longitudinal health evidence, and adds gated surgical-planning, rehearsal, and PSI workflows. These are architectural/development specifications, not deployed marketplace or clinical-effectiveness claims.
 
