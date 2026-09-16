@@ -15,6 +15,7 @@ import {
 import { verifierFromEnvironment, type Principal, type PrincipalVerifier } from "./auth.js";
 import { MemoryPetRepository, type PetRepository } from "./repository.js";
 import { registerImagingRoutes } from "./imaging/routes.js";
+import { integrationServicesFromEnvironment, registerIntegrationRoutes, type IntegrationServices } from "./integrations/routes.js";
 
 declare module "fastify" { interface FastifyRequest { principal?: Principal } }
 
@@ -25,8 +26,9 @@ export interface AppOptions {
   clinicalSigningKey?: string;
   publicApiBaseUrl?: string;
   corsAllowedOrigins?: string[];
+  integrations?: IntegrationServices;
 }
-const protectedPrefixes = ["/v1/pets", "/v1/regulations", "/v1/organizations", "/v1/imaging"];
+const protectedPrefixes = ["/v1/pets", "/v1/regulations", "/v1/organizations", "/v1/imaging", "/v1/integrations"];
 
 async function ownedPet(repository: PetRepository, petId: string, principal: Principal) {
   const pet = await repository.findById(petId);
@@ -184,5 +186,6 @@ export async function buildApp(options: AppOptions = {}) {
   app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/messages",async(request,reply)=>{ const principal=request.principal!; const member=await repository.findMembership(request.params.organizationId,principal.userId); if(!member)return reply.code(403).send({error:"clinic_membership_required"}); const parsed=createClinicMessageSchema.safeParse(request.body); if(!parsed.success)return reply.code(400).send({error:"invalid_message",issues:parsed.error.issues}); if(!await hasActiveClinicGrant(repository,parsed.data.petId,{...principal,organizationId:request.params.organizationId},"pet.profile.read"))return reply.code(403).send({error:"active_consent_required"}); const item:ClinicMessage=clinicMessageSchema.parse({...parsed.data,messageId:randomUUID(),clinicId:request.params.organizationId,authorUserId:principal.userId,createdAt:new Date().toISOString()}); return reply.code(201).send(await repository.createClinicMessage(item)); });
 
   await registerImagingRoutes(app, repository, { signingKey: clinicalSigningKey, publicApiBaseUrl });
+  await registerIntegrationRoutes(app, repository, options.integrations ?? integrationServicesFromEnvironment());
   return app;
 }

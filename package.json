@@ -10,6 +10,8 @@
     "start": "npm run start --workspace=@virtuapet/api",
     "bootstrap:postgres": "node scripts/bootstrap-postgres.mjs",
     "migrate": "node scripts/migrate.mjs",
+    "test:integrations": "npm run build --workspace=@virtuapet/contracts && npm run test --workspace=@virtuapet/api -- src/integrations",
+    "verify:integration-isolation": "node scripts/verify-integration-isolation.mjs",
     "test": "npm run build --workspace=@virtuapet/contracts && npm run test --workspaces --if-present",
     "typecheck": "npm run build --workspace=@virtuapet/contracts && npm run typecheck --workspaces --if-present"
   },

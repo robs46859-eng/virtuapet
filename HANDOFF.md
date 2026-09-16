@@ -6,7 +6,21 @@ Phase 1 and Phase 2 are code-complete at their documented engineering levels. Ph
 
 Deployment status as of 2026-09-15: `https://virtuapet.com/` returns HTTP 200. Azure revision `virtuapet-staging-api--a9f4854-http` runs the image for commit `a9f4854e678188c6fee6dc5ed413fceb099ca095` and receives 100% of staging API traffic. HTTP liveness uses `/healthz`, readiness uses `/readyz`, and startup uses `/healthz`; the revision is healthy and both endpoints return 200. Capabilities, approved-origin CORS, untrusted-origin denial, and anonymous protected-route denial were also verified. Prior revisions remain active at 0% for rollback.
 
-`api.virtuapet.com` is not active: fresh DNS checks returned no A or CNAME record, HTTPS could not resolve the host, and the Container App has no custom-domain binding. Do not report this hostname as deployed until Hostinger DNS and Azure certificate binding are completed and tested.
+Updated verification on 2026-09-15: `api.virtuapet.com` is SNI-bound to the existing Azure revision. Health/readiness returned 200 with verified TLS and an anonymous protected request returned 401; Hostinger website returned 200. The first readiness attempt timed out before a successful retry, with no established cause. This supersedes the earlier missing-DNS observation. No new integration code was deployed during this verification.
+
+## Parallel integration foundation — 2026-09-15
+
+Subagents implemented tenant security, Layer8 signed-policy consumption, and Pawsome3D/GibiWorld boundaries in parallel; the parent integrated the HTTP routes, PawPath read adapter, documentation and CI. A separate agent reviewed PawPath and the routes/workflows. See [the rollout specification](docs/architecture/INTEGRATION_ROLLOUT.md) for detailed contracts and acceptance.
+
+- Full local verification: **215 tests pass** (194 API + 21 contracts), typecheck/build pass, zero audit vulnerabilities. Web builds but has no automated tests.
+- Disposable PostgreSQL: migrations 001–004 pass, repeat run is idempotent, persistent repository verifier passes, all nine forced-RLS fixture checks pass. This does not enable RLS on application tables or establish Azure tenant isolation.
+- Layer8 uses a proposed protocol, pinned asymmetric public keys, request/tenant binding, expiry, and fail-closed entitlement checks. Its deployed contract must be confirmed before enabling.
+- Pawsome3D existing-order preview and PawPath nearby reads use observed provider routes. They stay unavailable without server-owned, consent-checked identity linking and dedicated per-user credentials; no global admin token or automatic OIDC forwarding is allowed.
+- GibiWorld preflight is server-only; secure client delivery and physical-device acceptance remain open. No clinical geometry or surgical effectiveness was established.
+- Six independent integration CI jobs plus real PostgreSQL isolation run alongside full regression CI. Image publication now waits for successful main-push CI and tags the exact tested commit. Azure rollout remains a separate action; no mutable staging tag is updated.
+- Judy, Stelar and Shopify remain unconnected. Stripe ownership stays with Layer8; SugarDaddy.lgbt data stays outside commercial integrations.
+
+Next: confirm Layer8's contract and implement revocable provider identity/consent links; add audit/rate limits; activate with two test tenants in an isolated staging revision. Then complete legacy-table transaction migration/RLS, live tenant tests and backup restore. Do not turn on flags and call this connected without the explicit success/denial/expiry tests in the rollout document.
 
 The authoritative closeouts are:
 - Phase 1: `docs/product/PHASE_1_ACCEPTANCE.md`
@@ -25,7 +39,7 @@ They separate completed engineering evidence from outstanding operational, exter
 5. Run `node scripts/verify-postgres.mjs` with the same connection string.
 6. Run `npm audit --audit-level=high`.
 
-Latest local verification on 2026-09-15: 39 tests passed, type-check passed, production build passed, `git diff --check` passed, and `npm audit --audit-level=high` reported zero vulnerabilities. A fresh temporary PostgreSQL 16 cluster passed bootstrap, migrations 001-004, a second idempotent migration run, repository verification, runtime-role DDL denial, and read-only-role write denial.
+Earlier deployment baseline on 2026-09-15: 39 tests passed, type-check passed, production build passed, `git diff --check` passed, and `npm audit --audit-level=high` reported zero vulnerabilities. A fresh temporary PostgreSQL 16 cluster passed bootstrap, migrations 001-004, a second idempotent migration run, repository verification, runtime-role DDL denial, and read-only-role write denial. The newer integration verification above supersedes the test count with 215 passing tests.
 
 Azure database and deployment evidence:
 
@@ -70,10 +84,10 @@ Azure database and deployment evidence:
 
 1. Design and implement transaction-bound database identity before enabling RLS on existing tenant tables.
 2. Prove two-tenant allowed and denied cases against Azure PostgreSQL using controlled authenticated identities.
-3. Add the required Hostinger DNS verification record and API CNAME, bind `api.virtuapet.com` to Container Apps with a managed certificate, and verify DNS/TLS/API behavior.
+3. Preserve the verified `api.virtuapet.com` binding and repeat TLS/API checks for every candidate deployment; confirm the next Hostinger web build targets the custom API host.
 4. Perform a non-destructive point-in-time restore drill and record evidence.
 5. Exercise readiness failure by safely removing database access from an isolated revision; do not interrupt the active revision.
-6. Start the VirtuaPet-side GibiWorld manifest API and adapter without modifying the GibiWorld repository.
+6. Build on the tested server-side GibiWorld preflight: add trusted asset download/hash, revocation/version lookup and secure delivery before exposing a public manifest endpoint. Do not modify GibiWorld until its runtime work is separately scoped.
 
 ## Phase 5 commercial scale
 
