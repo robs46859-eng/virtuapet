@@ -4,7 +4,7 @@
 ## Layer8 cutover update — 2026-09-17
 
 The authorized SALTI8 API DNS cutover now points `api.salti8.com` to Azure,
-and Azure managed-certificate issuance is in progress. VirtuaPet remains on
+and Azure managed TLS is issued and public acceptance passes. VirtuaPet remains on
 Microsoft Entra. The two organization mappings and distinct server-side
 `virtuapet:policy` credentials are provisioned, but
 `LAYER8_IDENTITY_LINKS_ENABLED` and `LAYER8_POLICY_ENABLED` remain disabled

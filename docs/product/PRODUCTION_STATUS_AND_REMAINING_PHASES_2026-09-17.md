@@ -31,8 +31,8 @@ Status captured: 2026-09-17 during the authorized SALTI8/Layer8 API cutover.
 - [x] Migration 005 and the immutable Layer8-capable VirtuaPet API deployed.
 - [x] Managed verification and link-encryption material attached without
   placing private credentials in browser code or source control.
-- [ ] Confirm `https://api.salti8.com` managed TLS and public Layer8 readiness
-  after DNS propagation.
+- [x] `https://api.salti8.com` managed TLS, public Layer8 health/readiness,
+  anonymous denial, exact CORS, and signed webhook delivery pass.
 - [ ] Sign in to VirtuaPet as both Entra guests and retain one authenticated
   session per VirtuaPet organization.
 - [ ] Create and consume one link challenge for each organization, proving that
