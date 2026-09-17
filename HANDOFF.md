@@ -2,6 +2,34 @@
 
 ## Current release
 
+### Activation checkpoint — 2026-09-17
+
+- Revision `virtuapet-staging-api--layer8ready` runs immutable image
+  `ghcr.io/robs46859-eng/virtuapet-api:60dc8a3258a65ec600b899ad06944d3a8b5b1f36`
+  at 100% staging traffic; `/healthz` and `/readyz` return 200.
+- Entra guests `rob@virtuapet.com` and `robs46859@gmail.com` have accepted their
+  invitations and are separate members of VirtuaPet Staging A
+  (`62335dff-756b-47a7-ba94-95e240c3680d`) and VirtuaPet Staging B
+  (`6d8bed91-b840-4884-9ecb-907b4cf0c65f`), respectively.
+- Layer8 maps those UUIDs to `salti8-staging-a` and `salti8-staging-b`. Distinct
+  `virtuapet:policy` credentials are stored as a tenant-key map in VirtuaPet Key
+  Vault and attached to the current revision through a managed secret reference.
+- `LAYER8_POLICY_ENABLED` and `LAYER8_IDENTITY_LINKS_ENABLED` remain false.
+
+Remaining activation checklist:
+
+- [ ] Establish one authenticated Entra browser session per VirtuaPet staging
+  organization and one Clerk session per corresponding Layer8 organization.
+- [ ] Pass correct-tenant success and cross-tenant denial, expired proof,
+  replay, consent revocation, policy-key revocation, and Redis-outage checks.
+- [ ] Complete Layer8 live Stripe secret/webhook configuration and signed
+  webhook, Checkout, entitlement, cancellation, and portal acceptance.
+- [ ] Bind and verify the intended public Layer8 API domain, then repeat TLS,
+  CORS, health, readiness, authenticated workflow, audit delivery, alert
+  receipt, and rollback checks.
+- [ ] Enable both integration flags only after the preceding checks pass; probe
+  readiness and run the two-tenant browser acceptance again after activation.
+
 Phase 1 and Phase 2 are code-complete at their documented engineering levels. Phase 3 is an engineering prototype: it provides imaging contracts, metadata validation, correction lineage, access gates, signed manifest delivery, PostgreSQL migration 003, and synthetic metric-calculation fixtures. It does not yet implement or validate a clinical DICOM-to-digital-twin pipeline.
 
 Deployment status as of 2026-09-15: `https://virtuapet.com/` returns HTTP 200. Azure revision `virtuapet-staging-api--a9f4854-http` runs the image for commit `a9f4854e678188c6fee6dc5ed413fceb099ca095` and receives 100% of staging API traffic. HTTP liveness uses `/healthz`, readiness uses `/readyz`, and startup uses `/healthz`; the revision is healthy and both endpoints return 200. Capabilities, approved-origin CORS, untrusted-origin denial, and anonymous protected-route denial were also verified. Prior revisions remain active at 0% for rollback.
