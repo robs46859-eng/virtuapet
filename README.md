@@ -96,6 +96,7 @@ The API starts at `http://127.0.0.1:8080`. Run the web workspace development com
 ## Authoritative documents
 
 - [Phased development plan](docs/product/PHASED_DEVELOPMENT_PLAN.md)
+- [Roadmap to robotic surgery software](docs/product/ROBOTIC_SURGERY_SOFTWARE_MILESTONES.md)
 - [Full architecture specification](docs/architecture/VIRTUAPET_ARCHITECTURE_SPECIFICATION.md)
 - [Master architecture v6](docs/architecture/VIRTUAPET_MASTER_ARCHITECTURE_v6.md)
 - [Anatomical twin, planning, and PSI architecture v2](docs/architecture/VIRTUAPET_CLINICAL_DIGITAL_TWIN_ARCHITECTURE_v2.md)
