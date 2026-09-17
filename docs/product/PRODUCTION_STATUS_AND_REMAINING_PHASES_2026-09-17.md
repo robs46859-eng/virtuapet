@@ -7,9 +7,9 @@ Status captured: 2026-09-17 during the authorized SALTI8/Layer8 API cutover.
 - VirtuaPet keeps Microsoft Entra authentication. Clerk is used only by
   SALTI8/Layer8.
 - Immutable API image
-  `ghcr.io/robs46859-eng/virtuapet-api:60dc8a3258a65ec600b899ad06944d3a8b5b1f36`
-  runs in revision `virtuapet-staging-api--layer8ready`; health and dependency
-  readiness pass.
+  `ghcr.io/robs46859-eng/virtuapet-api:0e456a2ee02782d9896a7417a39668a6f5fdda33`
+  runs in healthy revision `virtuapet-staging-api--0000003` at 100% traffic;
+  health, dependency readiness, exact browser CORS, and anonymous denial pass.
 - VirtuaPet Staging A UUID `62335dff-756b-47a7-ba94-95e240c3680d` is assigned
   to accepted Entra guest `rob@virtuapet.com` and maps to Layer8 tenant
   `salti8-staging-a`.
@@ -22,10 +22,13 @@ Status captured: 2026-09-17 during the authorized SALTI8/Layer8 API cutover.
 - `LAYER8_IDENTITY_LINKS_ENABLED` and `LAYER8_POLICY_ENABLED` remain disabled.
   No production authorization claim should be made until the real two-tenant
   link and policy drills pass.
-- The Entra application now exposes the delegated `access_as_user` scope and
-  registers both VirtuaPet SPA origins. The web client and API verifier changes
-  that use Entra `oid` plus server-checked organization membership are pending
-  release deployment and live two-account acceptance.
+- The Entra application exposes the delegated `access_as_user` scope and
+  registers both VirtuaPet SPA origins. Hostinger serves the Entra-enabled web
+  client, and the API uses verified Entra `oid` plus server-checked organization
+  membership.
+- A live browser sign-in using cached account `rob@stelar.host` was correctly
+  denied for Staging A with `active_membership_required`. The intended two
+  guest accounts still require interactive selection and acceptance evidence.
 
 ## Remaining activation checklist
 
@@ -37,6 +40,9 @@ Status captured: 2026-09-17 during the authorized SALTI8/Layer8 API cutover.
   placing private credentials in browser code or source control.
 - [x] `https://api.salti8.com` managed TLS, public Layer8 health/readiness,
   anonymous denial, exact CORS, and signed webhook delivery pass.
+- [x] Entra-enabled Hostinger bundle and matching immutable Azure API revision
+  deployed; public health/readiness, CORS, anonymous denial, and a wrong-account
+  membership denial pass.
 - [ ] Sign in to VirtuaPet as both Entra guests and retain one authenticated
   session per VirtuaPet organization.
 - [ ] Create and consume one link challenge for each organization, proving that

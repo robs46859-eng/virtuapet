@@ -1,3 +1,5 @@
+import { PublicClientApplication } from "@azure/msal-browser";
+
 type Capability = { id: string; name: string; status: string };
 
 const fallback: Capability[] = [
@@ -76,7 +78,7 @@ if (entraClientId && entraTenantId && entraScope) {
 
   signIn.addEventListener("click", () => {
     if (auth.getActiveAccount()) void auth.logoutRedirect({ postLogoutRedirectUri: window.location.origin });
-    else void auth.loginRedirect({ scopes: [entraScope] });
+    else void auth.loginRedirect({ scopes: [entraScope], prompt: "select_account" });
   });
 
   verify.addEventListener("click", async () => {
@@ -97,4 +99,3 @@ if (entraClientId && entraTenantId && entraScope) {
     }
   });
 }
-import { PublicClientApplication } from "@azure/msal-browser";
