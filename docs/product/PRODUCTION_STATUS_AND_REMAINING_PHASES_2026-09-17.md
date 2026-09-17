@@ -26,9 +26,12 @@ Status captured: 2026-09-17 during the authorized SALTI8/Layer8 API cutover.
   registers both VirtuaPet SPA origins. Hostinger serves the Entra-enabled web
   client, and the API uses verified Entra `oid` plus server-checked organization
   membership.
-- A live browser sign-in using cached account `rob@stelar.host` was correctly
-  denied for Staging A with `active_membership_required`. The intended two
-  guest accounts still require interactive selection and acceptance evidence.
+- Two simultaneous Firefox sessions now provide live browser evidence for the
+  intended Entra guests. `rob@virtuapet.com` succeeds for Staging A and is
+  denied for Staging B with `active_membership_required`;
+  `robs46859@gmail.com` succeeds for Staging B and receives the same denial for
+  Staging A. Both sessions were restored to their assigned organizations after
+  the reciprocal negative tests.
 
 ## Remaining activation checklist
 
@@ -43,14 +46,16 @@ Status captured: 2026-09-17 during the authorized SALTI8/Layer8 API cutover.
 - [x] Entra-enabled Hostinger bundle and matching immutable Azure API revision
   deployed; public health/readiness, CORS, anonymous denial, and a wrong-account
   membership denial pass.
-- [ ] Sign in to VirtuaPet as both Entra guests and retain one authenticated
-  session per VirtuaPet organization.
+- [x] Sign in to VirtuaPet as both Entra guests, retain one authenticated
+  session per VirtuaPet organization, and prove reciprocal wrong-organization
+  membership denial.
 - [ ] Create and consume one link challenge for each organization, proving that
   a changed subject, changed tenant, expired proof, replayed proof, and revoked
   consent are denied.
-- [ ] Prove a correct-tenant policy allow and both cross-tenant denials, then
-  prove API-key revocation, billing cancellation, and Redis/Layer8 outage fail
-  closed.
+- [ ] Prove a correct-tenant signed policy allow and signed-policy cross-tenant
+  denials, then prove API-key revocation, billing cancellation, and
+  Redis/Layer8 outage fail closed. The browser membership denials above do not
+  replace these Layer8 protocol tests.
 - [ ] Enable identity links first and policy enforcement second, capture fresh
   health/readiness and authenticated acceptance evidence, and keep the prior
   immutable revision available for rollback.
@@ -73,7 +78,8 @@ Status captured: 2026-09-17 during the authorized SALTI8/Layer8 API cutover.
    marketplace delivery. Current clinical results are engineering evidence and
    do not establish clinical effectiveness.
 
-VirtuaPet is deployed and dependency-ready with the Layer8 integration prepared
-server-side. Full production readiness remains open because the authenticated
-two-tenant activation, Phase 4 operational evidence, provider contracts, and
-clinical validation phases are not yet complete.
+VirtuaPet is deployed and dependency-ready with live two-account Entra
+organization isolation and the Layer8 integration prepared server-side. Full
+production readiness remains open because identity-link and signed-policy
+activation, Phase 4 operational evidence, provider contracts, and clinical
+validation phases are not yet complete.

@@ -3,7 +3,7 @@
 
 ## Deployment update — 2026-09-17
 
-The real Layer8 signed protocol is deployed in both repositories. VirtuaPet uses Entra; SALTI8 uses Clerk. The two UUID-to-tenant mappings and tenant-scoped policy credentials are provisioned through Key Vault. The authorized Layer8 DNS cutover is underway, while VirtuaPet identity-link and policy flags remain disabled pending the real two-tenant acceptance described in `../product/PRODUCTION_STATUS_AND_REMAINING_PHASES_2026-09-17.md`.
+The real Layer8 signed protocol is deployed in both repositories. VirtuaPet uses Entra; SALTI8 uses Clerk. The two UUID-to-tenant mappings and tenant-scoped policy credentials are provisioned through Key Vault. Live browser sessions prove both Entra guests have access only to their assigned VirtuaPet organization. VirtuaPet identity-link and policy flags remain disabled pending signed link and policy acceptance described in `../product/PRODUCTION_STATUS_AND_REMAINING_PHASES_2026-09-17.md`.
 
 Document ID: `VP-ARCH-INTEGRATIONS-001`
 
@@ -15,7 +15,7 @@ Release level: tested engineering foundation; external connections are disabled.
 
 | Workstream | Implemented in this repository | Not yet completed |
 | --- | --- | --- |
-| Tenant security | Server-membership gate; transaction-local tenant/user context; real PostgreSQL isolation fixture | Transaction migration and reviewed RLS for legacy application tables; live Azure two-tenant proof |
+| Tenant security | Server-membership gate; live reciprocal Entra organization denial; transaction-local tenant/user context; real PostgreSQL isolation fixture | Transaction migration and reviewed RLS for legacy application tables; live Azure database-isolation proof |
 | Layer8 | Asymmetric signed-policy consumer, exact request binding, fail-closed entitlement check | Inspected operator repository lacks the required endpoint; production-service contract, live keys, tenant mapping and staging interoperability remain gates |
 | Pawsome3D | Read-only existing-order preview adapter using observed provider route | Verified account/order links, revocable consent, dedicated per-user credentials, live ownership tests |
 | GibiWorld | Strict server-only spatial-manifest preflight | Safe asset download/hash, current revocation lookup, signed client delivery, Unity consumption, physical device tests |
