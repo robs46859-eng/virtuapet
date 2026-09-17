@@ -3,9 +3,9 @@
 
 ## Deployment update — 2026-09-17
 
-The real Layer8 signed protocol is deployed in both repositories. VirtuaPet uses Entra; SALTI8 uses Clerk. The two UUID-to-tenant mappings and tenant-scoped policy credentials are provisioned through Key Vault. Live browser sessions prove both Entra guests have access only to their assigned VirtuaPet organization. VirtuaPet identity-link and policy flags remain disabled pending the signed link and policy acceptance described in `../product/PRODUCTION_STATUS_AND_REMAINING_PHASES_2026-09-17.md`.
+The real Layer8 signed protocol is deployed in both repositories. VirtuaPet uses Entra; SALTI8 uses Clerk. The two UUID-to-tenant mappings and tenant-scoped policy credentials are provisioned through Key Vault. Live browser sessions prove both Entra guests have access only to their assigned VirtuaPet organization. Identity-link rehearsal is enabled on healthy revisions; policy remains disabled pending the signed link and policy acceptance described in `../product/PRODUCTION_STATUS_AND_REMAINING_PHASES_2026-09-17.md`.
 
-Status: **implemented in both repositories and deployed with activation disabled by default**. Layer8 supports the signed link-proof and tenant-policy contract described here. Managed verification material, explicit VirtuaPet UUID-to-Layer8 tenant mappings, and separate tenant policy credentials are attached through Key Vault references. Real two-tenant Entra membership isolation has passed; signed identity-link and policy interoperability evidence remains required.
+Status: **implemented in both repositories and deployed in a bounded identity-link rehearsal**. Layer8 supports the signed link-proof and tenant-policy contract described here. Managed verification material, explicit VirtuaPet UUID-to-Layer8 tenant mappings, and separate tenant policy credentials are attached through Key Vault references. Real two-tenant Entra membership isolation has passed; signed identity-link and policy interoperability evidence remains required.
 
 The historical `layer8-operator` review below explains why its prototype paths were not reused. The production contract is now implemented in the separate SALTI8/Layer8 repository and deployed to Azure. The implementation keeps this document's fail-closed authentication and tenant boundaries.
 

@@ -1,6 +1,6 @@
 # Verified Layer8 account links
 
-Status: implemented backend foundation; disabled unless configured. Local cryptographic and HTTP tests do not establish a deployed connection or a completed customer account-link flow. The dashboard still needs a reviewed account-connection interface and a real authenticated acceptance run.
+Status: implemented backend foundation with a reviewed, passing-build staging account-connection interface. The identity-link endpoints are enabled on the healthy Azure rehearsal revision while policy remains disabled. Local cryptographic and HTTP tests and the built client do not establish a completed customer account-link flow; Hostinger publication and real authenticated two-tenant acceptance remain required.
 
 ## What a link means
 

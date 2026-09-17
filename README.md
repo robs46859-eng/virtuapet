@@ -6,9 +6,10 @@
 The authorized SALTI8 API DNS cutover now points `api.salti8.com` to Azure,
 and Azure managed TLS is issued and public acceptance passes. VirtuaPet remains on
 Microsoft Entra. The two organization mappings and distinct server-side
-`virtuapet:policy` credentials are provisioned, but
-`LAYER8_IDENTITY_LINKS_ENABLED` and `LAYER8_POLICY_ENABLED` remain disabled
-until both authenticated tenant link/policy drills pass. See
+`virtuapet:policy` credentials are provisioned. Identity-link rehearsal is
+enabled on healthy revision `virtuapet-staging-api--linkson`, while
+`LAYER8_POLICY_ENABLED` remains disabled until both authenticated tenant
+link/policy drills pass. See
 `docs/product/PRODUCTION_STATUS_AND_REMAINING_PHASES_2026-09-17.md`.
 
 VirtuaPet is a shared pet-care platform for households, veterinary offices, caregivers, travel partners, and interactive 3D experiences. This repository starts with the safety and data foundation needed by every later product.
@@ -53,7 +54,7 @@ Phase 3 is an engineering prototype with passing code tests. Real DICOM pixel pr
 
 Phase 4 has passing local tests and build checks. Azure revision `virtuapet-staging-api--a9f4854-http` receives 100% of API traffic, with migrations 001–004 and HTTP health/readiness/startup probes. On 2026-09-15, `api.virtuapet.com` was verified bound with TLS; health/readiness returned 200 and an anonymous protected request returned 401. The Hostinger website returned 200. The first readiness attempt timed out before a successful retry; its cause is unconfirmed. Backup restore, legacy-table RLS, authenticated end-user workflows, and live Azure tenant-isolation drills remain open.
 
-The integration slice is **deployed but still default-off**. The real Layer8 repository now implements the signed protocol, and VirtuaPet implements consented five-minute account links, encrypted proof storage, revocation, tenant-specific service credentials, and strict response verification. GitHub CI passed migration 005 and its forced-RLS verifier. On 2026-09-16, the existing Azure migration job was pinned to immutable image `d4d80542b9839aebd221f49fd58ccb408ce5ac3f`; execution `virtuapet-db-migrate-uxu20be` checksum-confirmed migrations 001–004 and successfully applied migration 005. The current API image includes the Layer8 integration and receives its tenant-key map through a managed Key Vault reference. Layer8 has its own isolated Azure staging service with readiness, rollback, and audit queue-to-Blob acceptance complete; this does not merge its database or service ownership into VirtuaPet. Live Firefox sessions now prove each Entra guest can access its assigned VirtuaPet organization and is denied access to the other organization. The connection remains default-off until the identity-link, signed-policy, failure-mode, and alert-delivery drills pass. Pawsome3D and PawPath still need their own provider-owned authorization/consent links. GibiWorld has server preflight only; Judy and Stelar are not connected.
+The integration slice is deployed in a bounded identity-link rehearsal. The real Layer8 repository implements the signed protocol, and VirtuaPet implements consented five-minute account links, encrypted proof storage, revocation, tenant-specific service credentials, and strict response verification. GitHub CI passed migration 005 and its forced-RLS verifier. On 2026-09-16, the existing Azure migration job was pinned to immutable image `d4d80542b9839aebd221f49fd58ccb408ce5ac3f`; execution `virtuapet-db-migrate-uxu20be` checksum-confirmed migrations 001–004 and successfully applied migration 005. Layer8 revision `layer8-staging-api--vpon` and VirtuaPet revision `virtuapet-staging-api--linkson` are healthy with link endpoints enabled; policy enforcement remains disabled. Live Firefox sessions prove each Entra guest can access its assigned VirtuaPet organization and is denied access to the other organization. The connection cannot be promoted until both signed links, signed-policy, failure-mode, and alert-delivery drills pass. Pawsome3D and PawPath still need their own provider-owned authorization/consent links. GibiWorld has server preflight only; Judy and Stelar are not connected.
 
 Activation checkpoint (2026-09-17): immutable image
 `ghcr.io/robs46859-eng/virtuapet-api:60dc8a3258a65ec600b899ad06944d3a8b5b1f36`

@@ -37,3 +37,7 @@ button, select { font: inherit; }
 .account-controls { display: flex; gap: .75rem; align-items: center; }
 #tenant-session { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
 #tenant-session[hidden] { display: none; }
+.link-panel { align-items: stretch; flex-direction: column; }
+.link-panel[hidden] { display: none; }
+.link-panel textarea { width: 100%; resize: vertical; border: 1px solid #c8d8d2; border-radius: 8px; padding: 10px; font: .8rem ui-monospace, SFMono-Regular, Menlo, monospace; }
+.link-panel button { align-self: flex-start; background: #166653; color: white; cursor: pointer; }

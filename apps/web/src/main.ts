@@ -61,6 +61,25 @@ if (entraClientId && entraTenantId && entraScope) {
   const organization = document.querySelector<HTMLSelectElement>("#organization")!;
   const verify = document.querySelector<HTMLButtonElement>("#verify-session")!;
   const status = document.querySelector<HTMLSpanElement>("#session-status")!;
+  const linkPanel = document.querySelector<HTMLElement>("#layer8-link")!;
+  const createChallenge = document.querySelector<HTMLButtonElement>("#create-link-challenge")!;
+  const challengeOutput = document.querySelector<HTMLTextAreaElement>("#link-challenge")!;
+  const proofInput = document.querySelector<HTMLTextAreaElement>("#link-proof")!;
+  const completeLink = document.querySelector<HTMLButtonElement>("#complete-link")!;
+  const linkStatus = document.querySelector<HTMLSpanElement>("#link-status")!;
+  let verifiedOrganization = "";
+  let activeChallengeId = "";
+
+  const authenticatedRequest = async (path: string, init: RequestInit = {}) => {
+    const account = auth.getActiveAccount();
+    if (!account) throw new Error("Sign in first.");
+    const token = await auth.acquireTokenSilent({ account, scopes: [entraScope] });
+    const headers = new Headers(init.headers);
+    headers.set("Authorization", `Bearer ${token.accessToken}`);
+    headers.set("X-VirtuaPet-Organization-Id", organization.value);
+    if (init.body) headers.set("Content-Type", "application/json");
+    return fetch(`${apiBaseUrl.replace(/\/$/, "")}${path}`, { ...init, headers, cache: "no-store" });
+  };
 
   const showAccount = (username: string) => {
     signIn.textContent = `Sign out ${username}`;
@@ -84,18 +103,64 @@ if (entraClientId && entraTenantId && entraScope) {
   verify.addEventListener("click", async () => {
     status.textContent = "Verifying organization membership…";
     try {
-      const account = auth.getActiveAccount();
-      if (!account) throw new Error("Sign in first.");
-      const token = await auth.acquireTokenSilent({ account, scopes: [entraScope] });
-      const response = await fetch(`${apiBaseUrl.replace(/\/$/, "")}/v1/integrations`, { headers: {
-        Authorization: `Bearer ${token.accessToken}`,
-        "X-VirtuaPet-Organization-Id": organization.value
-      } });
+      const response = await authenticatedRequest("/v1/integrations");
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(typeof body.error === "string" ? body.error : `HTTP ${response.status}`);
+      verifiedOrganization = organization.value;
+      activeChallengeId = "";
+      challengeOutput.value = "";
+      proofInput.value = "";
+      linkPanel.hidden = false;
       status.textContent = `Authenticated for ${organization.selectedOptions[0]?.textContent ?? organization.value}.`;
     } catch (error) {
+      verifiedOrganization = "";
+      linkPanel.hidden = true;
       status.textContent = error instanceof Error ? `Verification failed: ${error.message}` : "Verification failed.";
+    }
+  });
+
+  organization.addEventListener("change", () => {
+    verifiedOrganization = "";
+    activeChallengeId = "";
+    linkPanel.hidden = true;
+    status.textContent = "Verify the selected organization before linking.";
+  });
+
+  createChallenge.addEventListener("click", async () => {
+    linkStatus.textContent = "Creating one-time challenge…";
+    try {
+      if (verifiedOrganization !== organization.value) throw new Error("Verify this organization first.");
+      const response = await authenticatedRequest("/v1/integrations/layer8/links/challenges", {
+        method: "POST", body: JSON.stringify({})
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(typeof body.error === "string" ? body.error : `HTTP ${response.status}`);
+      activeChallengeId = typeof body.challengeId === "string" ? body.challengeId : "";
+      if (!activeChallengeId) throw new Error("Challenge response was incomplete.");
+      challengeOutput.value = JSON.stringify(body, null, 2);
+      proofInput.value = "";
+      linkStatus.textContent = "Challenge ready. Create its proof in the matching SALTI8 organization.";
+    } catch (error) {
+      linkStatus.textContent = error instanceof Error ? `Challenge failed: ${error.message}` : "Challenge failed.";
+    }
+  });
+
+  completeLink.addEventListener("click", async () => {
+    linkStatus.textContent = "Verifying and storing the encrypted link…";
+    try {
+      if (!activeChallengeId) throw new Error("Create a challenge first.");
+      const proofToken = proofInput.value.trim();
+      if (!proofToken) throw new Error("Paste the matching Layer8 proof.");
+      const response = await authenticatedRequest("/v1/integrations/layer8/links/complete", {
+        method: "POST", body: JSON.stringify({ challengeId: activeChallengeId, proofToken, consent: true })
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(typeof body.error === "string" ? body.error : `HTTP ${response.status}`);
+      proofInput.value = "";
+      activeChallengeId = "";
+      linkStatus.textContent = "Layer8 account linked. The signed proof is encrypted server-side.";
+    } catch (error) {
+      linkStatus.textContent = error instanceof Error ? `Link failed: ${error.message}` : "Link failed.";
     }
   });
 }

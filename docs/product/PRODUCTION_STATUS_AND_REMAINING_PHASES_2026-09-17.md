@@ -19,7 +19,8 @@ Status captured: 2026-09-17 during the authorized SALTI8/Layer8 API cutover.
 - Each organization has a distinct server-side Layer8 key scoped only to
   `virtuapet:policy`. The tenant-key map, link-encryption key, and Layer8 public
   verification material are stored through Key Vault references.
-- `LAYER8_IDENTITY_LINKS_ENABLED` and `LAYER8_POLICY_ENABLED` remain disabled.
+- Identity-link rehearsal is enabled on healthy revision
+  `virtuapet-staging-api--linkson`; `LAYER8_POLICY_ENABLED` remains disabled.
   No production authorization claim should be made until the real two-tenant
   link and policy drills pass.
 - The Entra application exposes the delegated `access_as_user` scope and
@@ -52,6 +53,9 @@ Status captured: 2026-09-17 during the authorized SALTI8/Layer8 API cutover.
 - [ ] Create and consume one link challenge for each organization, proving that
   a changed subject, changed tenant, expired proof, replayed proof, and revoked
   consent are denied.
+- [x] Deploy healthy Layer8 `--vpon` and VirtuaPet `--linkson` rehearsal
+  revisions while keeping policy enforcement disabled; anonymous requests
+  continue to fail closed.
 - [ ] Prove a correct-tenant signed policy allow and signed-policy cross-tenant
   denials, then prove API-key revocation, billing cancellation, and
   Redis/Layer8 outage fail closed. The browser membership denials above do not

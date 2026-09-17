@@ -37,6 +37,16 @@
           <button id="verify-session" type="button">Verify session</button>
           <span id="session-status">Select your assigned staging organization.</span>
         </section>
+        <section id="layer8-link" class="notice link-panel" aria-label="Layer8 account connection" hidden>
+          <strong>Layer8 staging link</strong>
+          <button id="create-link-challenge" type="button">Create challenge</button>
+          <label for="link-challenge">Challenge</label>
+          <textarea id="link-challenge" rows="5" readonly></textarea>
+          <label for="link-proof">Layer8 proof</label>
+          <textarea id="link-proof" rows="4" autocomplete="off" spellcheck="false"></textarea>
+          <button id="complete-link" type="button">Complete link</button>
+          <span id="link-status">Verify your assigned organization first.</span>
+        </section>
         <section class="notice" aria-label="Development status">
           <strong>Phase 2 pilot preview</strong>
           <span>This interface contains no live customer or clinical records. Clinical and regulation results require human review.</span>

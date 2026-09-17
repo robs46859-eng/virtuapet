@@ -6,17 +6,18 @@
 The authorized SALTI8 API DNS cutover now points `api.salti8.com` to Azure,
 and Azure managed TLS is issued and public acceptance passes. VirtuaPet remains on
 Microsoft Entra. The two organization mappings and distinct server-side
-`virtuapet:policy` credentials are provisioned, but
-`LAYER8_IDENTITY_LINKS_ENABLED` and `LAYER8_POLICY_ENABLED` remain disabled
-until both authenticated tenant link/policy drills pass. See
+`virtuapet:policy` credentials are provisioned. Identity-link rehearsal is
+enabled on healthy revision `virtuapet-staging-api--linkson`, while
+`LAYER8_POLICY_ENABLED` remains disabled until both authenticated tenant
+link/policy drills pass. See
 `docs/product/PRODUCTION_STATUS_AND_REMAINING_PHASES_2026-09-17.md`.
 
 ## Current release
 
 ### Activation checkpoint — 2026-09-17
 
-- Revision `virtuapet-staging-api--layer8ready` runs immutable image
-  `ghcr.io/robs46859-eng/virtuapet-api:60dc8a3258a65ec600b899ad06944d3a8b5b1f36`
+- Revision `virtuapet-staging-api--linkson` runs immutable image
+  `ghcr.io/robs46859-eng/virtuapet-api:0e456a2ee02782d9896a7417a39668a6f5fdda33`
   at 100% staging traffic; `/healthz` and `/readyz` return 200.
 - Entra guests `rob@virtuapet.com` and `robs46859@gmail.com` have accepted their
   invitations and are separate members of VirtuaPet Staging A
@@ -25,12 +26,14 @@ until both authenticated tenant link/policy drills pass. See
 - Layer8 maps those UUIDs to `salti8-staging-a` and `salti8-staging-b`. Distinct
   `virtuapet:policy` credentials are stored as a tenant-key map in VirtuaPet Key
   Vault and attached to the current revision through a managed secret reference.
-- `LAYER8_POLICY_ENABLED` and `LAYER8_IDENTITY_LINKS_ENABLED` remain false.
+- `LAYER8_IDENTITY_LINKS_ENABLED=true`; `LAYER8_POLICY_ENABLED=false` for the
+  bounded link rehearsal. Public health/readiness and anonymous denial pass.
 
 Remaining activation checklist:
 
-- [ ] Establish one authenticated Entra browser session per VirtuaPet staging
-  organization and one Clerk session per corresponding Layer8 organization.
+- [x] Establish one authenticated Entra browser session per VirtuaPet staging
+  organization and prove reciprocal wrong-organization membership denial.
+- [ ] Establish one Clerk session per corresponding Layer8 organization.
 - [ ] Pass correct-tenant success and cross-tenant denial, expired proof,
   replay, consent revocation, policy-key revocation, and Redis-outage checks.
 - [ ] Complete Layer8 live Stripe secret/webhook configuration and signed
@@ -38,8 +41,10 @@ Remaining activation checklist:
 - [ ] Bind and verify the intended public Layer8 API domain, then repeat TLS,
   CORS, health, readiness, authenticated workflow, audit delivery, alert
   receipt, and rollback checks.
-- [ ] Enable both integration flags only after the preceding checks pass; probe
-  readiness and run the two-tenant browser acceptance again after activation.
+- [x] Enable identity-link rehearsal after configuration review and probe
+  health/readiness plus anonymous denial.
+- [ ] Enable policy only after the link and denial checks pass, then repeat the
+  two-tenant browser acceptance and retain the prior revision for rollback.
 
 Phase 1 and Phase 2 are code-complete at their documented engineering levels. Phase 3 is an engineering prototype: it provides imaging contracts, metadata validation, correction lineage, access gates, signed manifest delivery, PostgreSQL migration 003, and synthetic metric-calculation fixtures. It does not yet implement or validate a clinical DICOM-to-digital-twin pipeline.
 
