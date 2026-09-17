@@ -60,3 +60,24 @@ flowchart LR
 ## Current readiness statement
 
 VirtuaPet currently has a deployed identity, tenant-isolation, signed-policy, entitlement, and integration foundation plus engineering prototypes for clinical twins and planning. It does not yet have a production DICOM pixel pipeline, clinically validated anatomical models, an approved surgical planning product, a connected surgical robot, hardware-in-the-loop evidence, or authorization for robotic clinical use.
+
+
+## DICOM implementation checkpoint
+
+The D1 offline worker foundation is implemented in `services/dicom-worker`:
+actual native classic CT pixel decoding, HU rescaling, source-position geometry,
+LPS/RAS affines, bounded inputs and explicit unsupported-format rejection.
+All 21 synthetic-file tests pass locally; dependency versions are locked and a
+separate CI job runs the worker tests. This is engineering evidence, not clinical
+validation or a deployed ingestion service.
+
+- [x] Detailed [implementation architecture](../architecture/DICOM_IMPLEMENTATION_SPEC.md).
+- [x] D1 offline CT decoding foundation and synthetic regression tests.
+- [ ] D2 authenticated upload, private quarantine, isolated jobs and durable manifests.
+- [ ] D3 MR/enhanced CT/compression and veterinary orientation profiles.
+- [ ] D4 measured segmentation, mesh generation and export validation.
+- [ ] D5 source-linked viewer, clinician corrections and approval workflow.
+- [ ] D6 procedure-specific clinical validation and release review.
+
+Existing Node imaging outputs remain prototypes. Never use them as fallback
+clinical results. No production imaging endpoint or cloud deployment was added.

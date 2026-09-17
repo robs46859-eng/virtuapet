@@ -6,6 +6,17 @@ on:
 permissions:
   contents: read
 jobs:
+  dicom-worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --project services/dicom-worker --locked
+      - run: uv run --project services/dicom-worker --locked pytest -q
   integration-contracts:
     name: integration-${{ matrix.suite }}
     runs-on: ubuntu-latest

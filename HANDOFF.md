@@ -1,5 +1,9 @@
 # VirtuaPet Engineering Handoff
 
+## DICOM implementation continuation
+
+Added the [DICOM implementation specification](docs/architecture/DICOM_IMPLEMENTATION_SPEC.md) and offline Python worker in `services/dicom-worker`. D1 decodes native classic CT pixels and constructs a source-position affine; 21 synthetic-file tests pass. It is not connected to production. Next is D2: authenticated upload/quarantine, scoped storage, isolated processing jobs and durable manifests. Existing Node imaging reconstruction/segmentation remain prototypes and must not become fallback clinical outputs.
+
 
 - 2026-09-17 activation closeout: both Layer8 staging tenants received separate $0/month live-mode Business subscriptions for webhook/entitlement verification; both show Business/Active with `spatial_intelligence`. Two identity links completed, mismatch/expiry/replay denials passed, a signed `spatial.preview` allow passed, and healthy `virtuapet-staging-api--policyon` now serves 100% traffic. Consent/key revocation, cancellation, and dependency-outage drills remain open.
 

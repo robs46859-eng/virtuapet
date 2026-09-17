@@ -93,8 +93,13 @@ The API starts at `http://127.0.0.1:8080`. Run the web workspace development com
 - `docs/product` - phased development plan, intended use, validation protocol, and acceptance evidence.
 - `infra` - local dependency definitions, migrations, and deployment guidance.
 
+## DICOM development
+
+The offline Python CT decoder now reconstructs actual pixel volumes with validated geometry. It is an engineering foundation; production ingestion, de-identification, segmentation, and clinical validation remain planned. See the [implementation architecture](docs/architecture/DICOM_IMPLEMENTATION_SPEC.md) and [worker setup](services/dicom-worker/README.md).
+
 ## Authoritative documents
 
+- [DICOM implementation architecture](docs/architecture/DICOM_IMPLEMENTATION_SPEC.md)
 - [Phased development plan](docs/product/PHASED_DEVELOPMENT_PLAN.md)
 - [Roadmap to robotic surgery software](docs/product/ROBOTIC_SURGERY_SOFTWARE_MILESTONES.md)
 - [Full architecture specification](docs/architecture/VIRTUAPET_ARCHITECTURE_SPECIFICATION.md)
