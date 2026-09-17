@@ -1,5 +1,10 @@
 # VirtuaPet parallel integration rollout
 
+
+## Deployment update — 2026-09-17
+
+The real Layer8 signed protocol is deployed in both repositories. VirtuaPet uses Entra; SALTI8 uses Clerk. The two UUID-to-tenant mappings and tenant-scoped policy credentials are provisioned through Key Vault. The authorized Layer8 DNS cutover is underway, while VirtuaPet identity-link and policy flags remain disabled pending the real two-tenant acceptance described in `../product/PRODUCTION_STATUS_AND_REMAINING_PHASES_2026-09-17.md`.
+
 Document ID: `VP-ARCH-INTEGRATIONS-001`
 
 Recorded: 2026-09-15

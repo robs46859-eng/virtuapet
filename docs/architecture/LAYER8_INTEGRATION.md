@@ -1,8 +1,13 @@
 # Layer8 integration: signed policy adapter
 
-Status: **implemented consumer-side adapter, proposed provider protocol, disabled by default**. This is not a claim that Layer8 is connected or that the deployed Layer8 API already supports this contract.
 
-The previous local Layer8 checkout was absent. A subsequent read-only GitHub check verified the supplied `robs46859-eng/layer8-operator` repository at commit `b4376372429fa90a23ebbf1c337ff526a96afa2b`. It implements a chat/operator prototype, not the required signed tenant-policy or entitlement endpoint. No provider URL has been guessed, no Layer8 deployment was changed, and no Stripe/payment endpoint was called.
+## Deployment update — 2026-09-17
+
+The real Layer8 signed protocol is deployed in both repositories. VirtuaPet uses Entra; SALTI8 uses Clerk. The two UUID-to-tenant mappings and tenant-scoped policy credentials are provisioned through Key Vault. The authorized Layer8 DNS cutover is underway, while VirtuaPet identity-link and policy flags remain disabled pending the real two-tenant acceptance described in `../product/PRODUCTION_STATUS_AND_REMAINING_PHASES_2026-09-17.md`.
+
+Status: **implemented in both repositories and deployed with activation disabled by default**. Layer8 supports the signed link-proof and tenant-policy contract described here. Managed verification material, explicit VirtuaPet UUID-to-Layer8 tenant mappings, and separate tenant policy credentials are attached through Key Vault references. Real authenticated two-tenant activation evidence remains required.
+
+The historical `layer8-operator` review below explains why its prototype paths were not reused. The production contract is now implemented in the separate SALTI8/Layer8 repository and deployed to Azure. The implementation keeps this document's fail-closed authentication and tenant boundaries.
 
 Source evidence from that exact commit:
 
@@ -73,7 +78,7 @@ Run `npm test --workspace @virtuapet/api -- src/integrations/layer8.test.ts`. Te
 Before calling the integration connected:
 
 - Identify the production Layer8 policy/billing service and confirm its endpoint and versioned contract; the inspected operator prototype does not supply them.
-- Confirm the mapping between VirtuaPet user/organization IDs and Layer8 customer/tenant IDs; this version requires matching UUIDs and does not guess a mapping.
+- Preserve the explicit server-owned mapping between VirtuaPet organization UUIDs and Layer8 tenant IDs; the systems do not require or assume matching identifiers.
 - Obtain a dedicated minimum-scope credential and pinned public keys through approved secret management.
 - Have Layer8 reject forged subjects/tenants and authorize this service only for its assigned tenants. A shared service credential alone is not proof of tenant authority.
 - Run a staging test with two real test tenants and show denial across tenant boundaries, entitlement removal, expiry, revoked credentials, and provider outage.

@@ -1,5 +1,16 @@
 # VirtuaPet
 
+
+## Layer8 cutover update — 2026-09-17
+
+The authorized SALTI8 API DNS cutover now points `api.salti8.com` to Azure,
+and Azure managed-certificate issuance is in progress. VirtuaPet remains on
+Microsoft Entra. The two organization mappings and distinct server-side
+`virtuapet:policy` credentials are provisioned, but
+`LAYER8_IDENTITY_LINKS_ENABLED` and `LAYER8_POLICY_ENABLED` remain disabled
+until both authenticated tenant link/policy drills pass. See
+`docs/product/PRODUCTION_STATUS_AND_REMAINING_PHASES_2026-09-17.md`.
+
 VirtuaPet is a shared pet-care platform for households, veterinary offices, caregivers, travel partners, and interactive 3D experiences. This repository starts with the safety and data foundation needed by every later product.
 
 ## Current status
@@ -97,3 +108,4 @@ The API starts at `http://127.0.0.1:8080`. Run the web workspace development com
 - [Phase 4 pilot specification](docs/product/PHASE_4_PILOT_SPECIFICATION.md)
 - [PostgreSQL operations runbook](docs/architecture/POSTGRESQL_OPERATIONS.md)
 - [Engineering handoff](HANDOFF.md)
+- [Production status and remaining phases](docs/product/PRODUCTION_STATUS_AND_REMAINING_PHASES_2026-09-17.md)
