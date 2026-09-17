@@ -36,6 +36,8 @@ Architecture v6 adds two separate marketplaces: clinic procurement for veterinar
 
 Layer8's Azure-native API, dependency readiness, rollback drill, and authorized audit queue-to-Blob path now pass. Next operational sequence: identify real approved staging organizations on both sides; create separate managed signing/encryption keys; create explicit mappings and dedicated per-tenant `virtuapet:policy` keys; configure alert notification routing; deploy the VirtuaPet immutable image to an isolated revision; run two-tenant allowed/denied/expiry/revocation drills; then promote only after Stripe test-mode, browser, custom-domain/TLS, and observability checks. Keep `LAYER8_POLICY_ENABLED` and `LAYER8_IDENTITY_LINKS_ENABLED` false until those gates pass.
 
+On 2026-09-17, Layer8's managed P-256 signing key was provisioned in its own Key Vault. VirtuaPet identity `id-virtuapet-staging` and vault `kv-virtuapet-stg-f7318c` now hold only the public JWKS/key ID plus a separate AES-256 link-encryption key. Revision `virtuapet-staging-api--0000002` returned healthy and ready with both integration flags still false. Trusted `https://virtuapet.com` CORS preflight and public TLS passed. No active real Layer8 tenants, Clerk organization mappings/sessions, dedicated tenant policy keys, or Stripe test credentials were available, so those acceptance gates remain open rather than being simulated.
+
 The authoritative closeouts are:
 - Phase 1: `docs/product/PHASE_1_ACCEPTANCE.md`
 - Phase 2: `docs/product/PHASE_2_ACCEPTANCE.md`
