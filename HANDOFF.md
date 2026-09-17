@@ -1,6 +1,8 @@
 # VirtuaPet Engineering Handoff
 
 
+- 2026-09-17 activation closeout: both Layer8 staging tenants received separate $0/month live-mode Business subscriptions for webhook/entitlement verification; both show Business/Active with `spatial_intelligence`. Two identity links completed, mismatch/expiry/replay denials passed, a signed `spatial.preview` allow passed, and healthy `virtuapet-staging-api--policyon` now serves 100% traffic. Consent/key revocation, cancellation, and dependency-outage drills remain open.
+
 ## Layer8 cutover update — 2026-09-17
 
 The authorized SALTI8 API DNS cutover now points `api.salti8.com` to Azure,

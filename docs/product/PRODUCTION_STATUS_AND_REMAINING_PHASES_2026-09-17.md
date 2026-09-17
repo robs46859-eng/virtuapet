@@ -20,9 +20,9 @@ Status captured: 2026-09-17 during the authorized SALTI8/Layer8 API cutover.
   `virtuapet:policy`. The tenant-key map, link-encryption key, and Layer8 public
   verification material are stored through Key Vault references.
 - Identity-link rehearsal is enabled on healthy revision
-  `virtuapet-staging-api--linkson`; `LAYER8_POLICY_ENABLED` remains disabled.
-  No production authorization claim should be made until the real two-tenant
-  link and policy drills pass.
+  `virtuapet-staging-api--linkson`; `LAYER8_POLICY_ENABLED=true` is serving at 100% traffic on healthy revision `virtuapet-staging-api--policyon`.
+  Both real tenant links and a correct-tenant signed policy allow now pass; the
+  remaining revocation, cancellation, and outage drills are listed below.
 - The Entra application exposes the delegated `access_as_user` scope and
   registers both VirtuaPet SPA origins. Hostinger serves the Entra-enabled web
   client, and the API uses verified Entra `oid` plus server-checked organization
@@ -50,19 +50,33 @@ Status captured: 2026-09-17 during the authorized SALTI8/Layer8 API cutover.
 - [x] Sign in to VirtuaPet as both Entra guests, retain one authenticated
   session per VirtuaPet organization, and prove reciprocal wrong-organization
   membership denial.
-- [ ] Create and consume one link challenge for each organization, proving that
-  a changed subject, changed tenant, expired proof, replayed proof, and revoked
-  consent are denied.
+- [x] Create and consume one signed link challenge for each organization. Both
+  links returned HTTP 201; reciprocal Clerk/VirtuaPet tenant mismatches, expired
+  proof, and replayed completion were denied. Consent revocation remains an
+  operational drill.
 - [x] Deploy healthy Layer8 `--vpon` and VirtuaPet `--linkson` rehearsal
   revisions while keeping policy enforcement disabled; anonymous requests
   continue to fail closed.
-- [ ] Prove a correct-tenant signed policy allow and signed-policy cross-tenant
-  denials, then prove API-key revocation, billing cancellation, and
-  Redis/Layer8 outage fail closed. The browser membership denials above do not
-  replace these Layer8 protocol tests.
-- [ ] Enable identity links first and policy enforcement second, capture fresh
-  health/readiness and authenticated acceptance evidence, and keep the prior
-  immutable revision available for rollback.
+- [x] Prove a correct-tenant signed policy allow for Staging A and signed
+  cross-tenant/expired-proof denials. The allow returned the exact
+  `spatial.preview` entitlement under `virtuapet-nonclinical-v1`.
+- [ ] Complete API-key revocation, billing cancellation, consent revocation, and
+  Redis/Layer8 outage fail-closed operational drills.
+- [x] Enable identity links first and policy enforcement second. Revision
+  `virtuapet-staging-api--policyon` is healthy at 100% traffic; `/healthz` and
+  `/readyz` return 200 and anonymous integration access returns 401. The prior
+  `--linkson` revision remains available at 0% for rollback.
+
+## Zero-dollar live Stripe staging activation
+
+Both mapped Layer8 tenants have separate live-mode Stripe Business subscriptions
+at $0/month using staging-only price `price_1UGnnu6X8IBUtLKfGuu7Zk7f`. Real signed
+Stripe subscription webhooks set both accounts to Business/Active and granted
+`spatial_intelligence`; no card was collected and no charge was made. The public
+pricing labels remain the commercial $299/month Business price. Before commercial
+production, restore the paid price reference or move staging billing into a
+dedicated Stripe test account, and cancel the two zero-dollar staging subscriptions
+when the acceptance program ends.
 
 ## Remaining build-out phases
 
