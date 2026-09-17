@@ -22,6 +22,10 @@ Status captured: 2026-09-17 during the authorized SALTI8/Layer8 API cutover.
 - `LAYER8_IDENTITY_LINKS_ENABLED` and `LAYER8_POLICY_ENABLED` remain disabled.
   No production authorization claim should be made until the real two-tenant
   link and policy drills pass.
+- The Entra application now exposes the delegated `access_as_user` scope and
+  registers both VirtuaPet SPA origins. The web client and API verifier changes
+  that use Entra `oid` plus server-checked organization membership are pending
+  release deployment and live two-account acceptance.
 
 ## Remaining activation checklist
 

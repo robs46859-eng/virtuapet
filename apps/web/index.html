@@ -24,8 +24,19 @@
       <main>
         <header>
           <div><p class="eyebrow">Shared care workspace</p><h1>Your pet's world in one place</h1></div>
-          <button type="button" disabled>Add a pet</button>
+          <div id="account-controls" class="account-controls" aria-live="polite">
+            <button id="sign-in" type="button">Sign in</button>
+          </div>
         </header>
+        <section id="tenant-session" class="notice" aria-label="Staging organization session" hidden>
+          <label for="organization">Organization</label>
+          <select id="organization">
+            <option value="62335dff-756b-47a7-ba94-95e240c3680d">VirtuaPet Staging A</option>
+            <option value="6d8bed91-b840-4884-9ecb-907b4cf0c65f">VirtuaPet Staging B</option>
+          </select>
+          <button id="verify-session" type="button">Verify session</button>
+          <span id="session-status">Select your assigned staging organization.</span>
+        </section>
         <section class="notice" aria-label="Development status">
           <strong>Phase 2 pilot preview</strong>
           <span>This interface contains no live customer or clinical records. Clinical and regulation results require human review.</span>

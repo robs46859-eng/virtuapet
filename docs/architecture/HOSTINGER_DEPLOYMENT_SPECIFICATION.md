@@ -46,6 +46,14 @@ Required API values:
 
 `DEV_API_TOKEN` is prohibited in staging and production. Variables beginning with `VITE_` are public browser configuration and must never contain secrets.
 
+Required public web values for Microsoft Entra sign-in are
+`VITE_ENTRA_CLIENT_ID`, `VITE_ENTRA_TENANT_ID`, and
+`VITE_ENTRA_API_SCOPE`. The registered SPA redirects must match
+`https://virtuapet.com` and `https://www.virtuapet.com`. The API verifier uses
+the signed Entra `oid` claim as the membership user UUID. A selected
+`X-VirtuaPet-Organization-Id` is only tenant context; every protected route
+must still verify active server-side membership before access.
+
 ## PostgreSQL on a Hostinger VPS
 
 The database VPS is a separate machine and account boundary from the public web application. Acceptance requires all of the following:
