@@ -17,7 +17,7 @@ node simulations/denver-mock/plan.mjs
 
 Initial integration sequence: protect root website → verify TLS/anonymous denial → deploy private landing → provision dedicated Entra-backed clinic → seed guardian-owned pets and explicit consent → bind Denver Mock Stripe credentials → verify one mail round trip → run feature and failure matrix. Mark a result passed only with actual returned records or received messages.
 
-Deployment note (September 18): Hostinger editor saved a compact equivalent of site/index.html after direct upload was unavailable. The persisted remote page has the same setup boundaries; root and index.html both return 401 anonymously. Authenticated rendered-page verification remains pending.
+Deployment note (September 18): Hostinger editor saved a compact equivalent of site/index.html after direct upload was unavailable. The persisted remote page has the same setup boundaries; root and index.html both return 401 anonymously. Authenticated Chrome rendering was visually confirmed across the complete page, including all simulation and capability-boundary notices.
 
 The operator handoff is [DENVER_MOCK_HANDOFF.md](../../docs/simulations/DENVER_MOCK_HANDOFF.md).
 

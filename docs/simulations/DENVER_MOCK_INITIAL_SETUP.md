@@ -83,7 +83,7 @@ Initial multiplier: **60x** (one real minute equals one simulated hour). Start p
 - [x] mypets.cc PHP/HTML hosting provisioned on the existing Business plan, September 18, 2026.
 - [x] Root directory authentication enabled by owner; anonymous HTTPS request returned 401 on September 18, 2026. Hostinger lists / as protected.
 - [x] HTTPS certificate verification passed. After root protection was enabled, anonymous requests to `/` and `/index.html` returned 401 on September 18, 2026.
-- [x] Private clinic landing HTML saved in Hostinger public_html/index.html and persisted after editor reload; authenticated browser rendering still pending.
+- [x] Private clinic landing HTML saved in Hostinger `public_html/index.html`, persisted after editor reload, and rendered successfully in an authenticated Chrome session on September 18, 2026. All status and safety notices were visible without layout breakage.
 - [ ] Dedicated VirtuaPet environment/tenant and Entra staff/guardian identities provisioned.
 - [ ] Sandbox credentials bound privately; no live Stripe settings reused.
 - [ ] Seed eight fictional pets through authenticated routes and record returned ids.

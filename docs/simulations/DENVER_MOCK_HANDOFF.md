@@ -23,7 +23,11 @@ clinic, a real patient record system, or a clinically validated product.
 - The owner enabled password protection for `/`; anonymous requests to `/` and
   `/index.html` return HTTP 401.
 - Hostinger saved `public_html/index.html`; the file persisted after an editor
-  reload. Authenticated visual rendering remains a separate gate.
+  reload. Authenticated visual rendering was confirmed in Chrome on September
+  18, 2026: the complete page rendered without visible layout breakage, including
+  the private-simulation badge, simulation-only warning, referral scope,
+  privacy statement, setup status, accelerated-time boundary, imaging boundary
+  and footer disclaimer.
 - Login to the designated clinic mailbox succeeded.
 - Stripe showed the **Denver Mock** account in sandbox mode with zero balance.
 - The local 60x business-event clock passed its isolated tests. It starts
@@ -54,27 +58,25 @@ clinic, a real patient record system, or a clinically validated product.
 
 ## Continue in this order
 
-1. Have the owner authenticate to `https://mypets.cc` with the newly created
-   site credentials, then verify the rendered page and its simulation notice.
-2. Refresh Azure/Graph authentication. Create a dedicated Entra-backed
+1. Refresh Azure/Graph authentication. Create a dedicated Entra-backed
    VirtuaPet organization only after confirming the target environment and
    platform administrator identity.
-3. Resolve eight participant Entra object IDs and create explicit guardian
+2. Resolve eight participant Entra object IDs and create explicit guardian
    memberships. Never derive identity from a shared password or email alone.
-4. Bind Denver Mock sandbox keys through a secret reference. Map Stripe Price
+3. Bind Denver Mock sandbox keys through a secret reference. Map Stripe Price
    IDs to internal entitlements; do not commit keys and do not use Payment Link
    IDs as entitlement identifiers.
-5. Seed the eight fictional pets through authenticated API routes and capture
+4. Seed the eight fictional pets through authenticated API routes and capture
    returned IDs in an ignored run artifact.
-6. Run consent, appointment, recall, message, inventory, manual FGS and
+5. Run consent, appointment, recall, message, inventory, manual FGS and
    regulation-evidence workflows, including cross-tenant and revoked-consent
    denials.
-7. Verify one `[SIMULATION]` mail round trip before enabling allowlisted
+6. Verify one `[SIMULATION]` mail round trip before enabling allowlisted
    correspondence. Never send passwords or clinical claims.
-8. Exercise sandbox billing success, decline, cancellation and refund with
+7. Exercise sandbox billing success, decline, cancellation and refund with
    Stripe-supported test time. Application accelerated time does not advance
    Stripe.
-9. Produce an evidence report that separates repository tests, deployed API
+8. Produce an evidence report that separates repository tests, deployed API
    responses, received messages and visible browser results.
 
 ## Rollback and recovery
