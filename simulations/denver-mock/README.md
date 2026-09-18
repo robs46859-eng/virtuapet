@@ -9,7 +9,8 @@ See [operating plan and setup evidence](../../docs/simulations/DENVER_MOCK_INITI
 Run the current isolated checks:
 
 ```sh
-node --test simulations/denver-mock/clock.test.mjs
+node --test simulations/denver-mock/*.test.mjs
+node simulations/denver-mock/plan.mjs
 ```
 
 `config.json` is a proposed configuration, not an active deployment. `clock.mjs` is tested independently and is not wired into VirtuaPet or Stripe. The local ignored `.env.participants.json` contains the user-authorized recipient roster; it must never be included in a site bundle or Git. No passwords are stored. Do not enable mail or seed a shared live tenant from this scaffold.
@@ -19,3 +20,8 @@ Initial integration sequence: protect root website → verify TLS/anonymous deni
 Deployment note (September 18): Hostinger editor saved a compact equivalent of site/index.html after direct upload was unavailable. The persisted remote page has the same setup boundaries; root and index.html both return 401 anonymously. Authenticated rendered-page verification remains pending.
 
 The operator handoff is [DENVER_MOCK_HANDOFF.md](../../docs/simulations/DENVER_MOCK_HANDOFF.md).
+
+`plan.mjs` validates the safe defaults and emits a deterministic, pseudonymous
+workflow plan. It performs no network calls, creates no accounts, sends no mail
+and creates no Stripe objects. Its output is planning evidence, not execution
+evidence.

@@ -1,8 +1,11 @@
 # MyPets Denver simulation handoff
 
-**Branch:** `virtuapets/denver-mock-clinic`  
-**Repository:** `robs46859-eng/virtuapet`  
-**Date:** September 18, 2026  
+**Branch:** `virtuapets/denver-mock-clinic`
+
+**Repository:** `robs46859-eng/virtuapet`
+
+**Date:** September 18, 2026
+
 **State:** private simulation foundation; no real clinical operation
 
 ## Purpose
