@@ -59,7 +59,7 @@ Participant addresses are stored only in the local ignored roster, indexed in th
 
 | Feature group | Exercise | Current setup status |
 |---|---|---|
-| Organizations, staff and Entra identities | Dedicated mock clinic, eight guardians; positive and denied access | Accounts/tenant not provisioned yet |
+| Organizations, staff and Entra identities | Dedicated mock clinic, eight authorized identities; positive and denied access | Organization and memberships provisioned; invitation acceptance and authenticated checks remain |
 | Pets and consent | Create profiles, grants, expiry and revocation | API foundation exists; mock data not seeded |
 | Appointments, recalls, messages | Book, notify, follow up and inspect authorship | Records available; actual delivery/automation must be tested separately |
 | Inventory | Receive/use stock and reject invalid quantities | Foundation available; no physical purchasing |
@@ -84,7 +84,8 @@ Initial multiplier: **60x** (one real minute equals one simulated hour). Start p
 - [x] Root directory authentication enabled by owner; anonymous HTTPS request returned 401 on September 18, 2026. Hostinger lists / as protected.
 - [x] HTTPS certificate verification passed. After root protection was enabled, anonymous requests to `/` and `/index.html` returned 401 on September 18, 2026.
 - [x] Private clinic landing HTML saved in Hostinger `public_html/index.html`, persisted after editor reload, and rendered successfully in an authenticated Chrome session on September 18, 2026. All status and safety notices were visible without layout breakage.
-- [ ] Dedicated VirtuaPet environment/tenant and Entra staff/guardian identities provisioned.
+- [x] Dedicated VirtuaPet organization and Entra staff/guardian identities provisioned. Organization UUID: `a8d2aeaa-8aaa-4fb8-9180-5e7591dd6b99`; one clinic administrator and seven guardian memberships verified on September 18, 2026.
+- [ ] Confirm invitation acceptance and a separate authenticated Denver-clinic session for each participant.
 - [ ] Sandbox credentials bound privately; no live Stripe settings reused.
 - [ ] Seed eight fictional pets through authenticated routes and record returned ids.
 - [ ] Confirm one labeled email round trip before enabling allowlisted workflow correspondence.

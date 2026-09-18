@@ -34,6 +34,15 @@ clinic, a real patient record system, or a clinically validated product.
   paused and does not alter authentication, webhook or audit time.
 - The eight authorized participant addresses are stored in the ignored local
   `.env.participants.json`; no passwords or recipient addresses are committed.
+- Microsoft Entra contains all eight authorized participant identities. The
+  invitation operation was completed on September 18, 2026.
+- VirtuaPet organization `a8d2aeaa-8aaa-4fb8-9180-5e7591dd6b99` is provisioned
+  as **MyPets Denver Veterinary Clinic (Simulation)** with one `clinic_admin`
+  membership and seven distinct `guardian` memberships. `rob@stelar.host` is
+  the administrator and is therefore not duplicated as a guardian.
+- The one-time Azure provisioning job completed successfully and was deleted.
+- The refreshed clinical dashboard and its one-page user guide are implemented
+  on this branch. They have not yet been deployed to `virtuapet.com`.
 
 ## Repository artifacts
 
@@ -43,10 +52,13 @@ clinic, a real patient record system, or a clinically validated product.
 - `simulations/denver-mock/clock.mjs`: isolated simulation clock
 - `simulations/denver-mock/clock.test.mjs`: clock safety checks
 - `simulations/denver-mock/site/index.html`: source landing page
+- `apps/web`: refreshed pilot dashboard with the Denver simulation selector
+- `output/pdf/virtuapet-dashboard-update-guide.pdf`: one-page update guide
 
 ## Exact boundaries
 
-- No dedicated VirtuaPet organization or Entra participants have been created.
+- Invitation acceptance and separate authenticated sessions remain to be
+  verified for each guardian identity.
 - No fictional pet has been submitted to a deployed API.
 - No Stripe customer, product, subscription, invoice, payment, refund or test
   clock has been created for this clinic.
@@ -58,24 +70,23 @@ clinic, a real patient record system, or a clinically validated product.
 
 ## Continue in this order
 
-1. Refresh Azure/Graph authentication. Create a dedicated Entra-backed
-   VirtuaPet organization only after confirming the target environment and
-   platform administrator identity.
-2. Resolve eight participant Entra object IDs and create explicit guardian
-   memberships. Never derive identity from a shared password or email alone.
-3. Bind Denver Mock sandbox keys through a secret reference. Map Stripe Price
+1. Accept any outstanding Microsoft invitations and verify each participant
+   signs into the Denver simulation with a distinct Entra session.
+2. Bind Denver Mock sandbox keys through a secret reference. Map Stripe Price
    IDs to internal entitlements; do not commit keys and do not use Payment Link
    IDs as entitlement identifiers.
-4. Seed the eight fictional pets through authenticated API routes and capture
+3. Seed the eight fictional pets through authenticated API routes and capture
    returned IDs in an ignored run artifact.
-5. Run consent, appointment, recall, message, inventory, manual FGS and
+4. Run consent, appointment, recall, message, inventory, manual FGS and
    regulation-evidence workflows, including cross-tenant and revoked-consent
    denials.
-6. Verify one `[SIMULATION]` mail round trip before enabling allowlisted
+5. Verify one `[SIMULATION]` mail round trip before enabling allowlisted
    correspondence. Never send passwords or clinical claims.
-7. Exercise sandbox billing success, decline, cancellation and refund with
+6. Exercise sandbox billing success, decline, cancellation and refund with
    Stripe-supported test time. Application accelerated time does not advance
    Stripe.
+7. Build and deploy the dashboard update only after its local build, responsive
+   visual review, PDF inspection, and authenticated organization check pass.
 8. Produce an evidence report that separates repository tests, deployed API
    responses, received messages and visible browser results.
 
@@ -86,5 +97,7 @@ clinic, a real patient record system, or a clinically validated product.
 - Outbound mail defaults to disabled in `config.json`.
 - Do not modify the existing VirtuaPet staging organizations or Layer8 live
   subscription fixtures for this simulation.
+- Remove the Denver organization and memberships together if the simulation is
+  retired; never leave orphaned access grants.
 - If environment identity is uncertain, stop before tenant creation and record
   the account, subscription, tenant, application and target API revision.

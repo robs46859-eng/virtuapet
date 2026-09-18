@@ -16,6 +16,25 @@ link/policy drills pass. See
 
 VirtuaPet is a shared pet-care platform for households, veterinary offices, caregivers, travel partners, and interactive 3D experiences. This repository starts with the safety and data foundation needed by every later product.
 
+## Denver mock clinic and dashboard update — 2026-09-18
+
+The private MyPets Denver simulation now has a dedicated VirtuaPet organization
+(`a8d2aeaa-8aaa-4fb8-9180-5e7591dd6b99`), eight authorized Entra identities,
+one clinic administrator and seven guardian memberships. Invitation acceptance,
+fictional pet seeding, sandbox billing, one labeled email round trip and the full
+positive/denial matrix remain execution gates.
+
+`apps/web` contains the refreshed warm clinical dashboard. It makes the Denver
+simulation easy to select, surfaces the opening checklist, and labels DICOM and
+other incomplete functions by their real engineering maturity. The attached
+design package informed visual treatment only; invented clinicians, patient
+telemetry, diagnosis, emergency dispatch, claims and validated imaging behavior
+were not adopted. The one-page user guide is available at
+`output/pdf/virtuapet-dashboard-update-guide.pdf` and is bundled into the web
+build from `apps/web/public`. See
+`docs/simulations/DENVER_MOCK_HANDOFF.md` for operational evidence and remaining
+steps.
+
 ## Current status
 
 Phase 1, Phase 2, and the Phase 3 Clinical Twin Validation release are code-complete at their documented engineering levels. The Phase 4 foundation is implemented locally but is not operationally closed. The repository now includes:

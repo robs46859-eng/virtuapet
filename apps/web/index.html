@@ -3,59 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="VirtuaPet household and veterinary care dashboard" />
-    <title>VirtuaPet Dashboard</title>
+    <meta name="description" content="VirtuaPet clinical workspace for pet profiles, consent, care coordination, and imaging prototypes" />
+    <title>VirtuaPet Clinical Workspace</title>
     <link rel="stylesheet" href="/src/styles.css" />
+    <link rel="stylesheet" href="/src/responsive.css" />
   </head>
   <body>
     <div class="app-shell">
       <aside>
-        <a class="brand" href="#overview" aria-label="VirtuaPet home"><span>V</span> VirtuaPet</a>
+        <a class="brand" href="#overview" aria-label="VirtuaPet home"><span>V</span><strong>VirtuaPet</strong><small>Clinical workspace</small></a>
         <nav aria-label="Main navigation">
-          <a class="active" href="#overview">Overview</a>
-          <a href="#profile">Pet Profile</a>
-          <a href="#care">Care and VetOS</a>
-          <a href="#travel">Travel</a>
-          <a href="#twins">3D and AR</a>
-          <a href="#settings">Privacy</a>
+          <a class="active" href="#overview">Overview</a><a href="#patients">Clients &amp; patients</a><a href="#care">Care coordination</a><a href="#imaging">DICOM studio</a><a href="#integrations">Integrations</a><a href="#settings">Privacy &amp; access</a>
         </nav>
-        <p class="phase-label">Phase 2 pilot foundation</p>
+        <div class="environment-card"><span class="pulse" aria-hidden="true"></span><div><strong>Pilot environment</strong><small>Human review required</small></div></div>
+        <p class="phase-label">Clinical decisions stay with licensed professionals.</p>
       </aside>
       <main>
         <header>
-          <div><p class="eyebrow">Shared care workspace</p><h1>Your pet's world in one place</h1></div>
-          <div id="account-controls" class="account-controls" aria-live="polite">
-            <button id="sign-in" type="button">Sign in</button>
-          </div>
+          <div><p class="eyebrow">Care team workspace</p><h1>Good afternoon</h1><p class="header-copy">One clear view of today’s authorized work.</p></div>
+          <div class="header-actions"><a class="guide-link" href="/virtuapet-dashboard-update-guide.pdf" target="_blank" rel="noopener">What changed</a><div id="account-controls" class="account-controls" aria-live="polite"><button id="sign-in" type="button">Sign in</button></div></div>
         </header>
-        <section id="tenant-session" class="notice" aria-label="Staging organization session" hidden>
-          <label for="organization">Organization</label>
-          <select id="organization">
-            <option value="62335dff-756b-47a7-ba94-95e240c3680d">VirtuaPet Staging A</option>
-            <option value="6d8bed91-b840-4884-9ecb-907b4cf0c65f">VirtuaPet Staging B</option>
-          </select>
-          <button id="verify-session" type="button">Verify session</button>
-          <span id="session-status">Select your assigned staging organization.</span>
+        <section id="tenant-session" class="notice session-panel" aria-label="Organization session" hidden>
+          <div><strong>Organization session</strong><span id="session-status">Select your assigned organization.</span></div><label for="organization">Organization</label>
+          <select id="organization"><option value="a8d2aeaa-8aaa-4fb8-9180-5e7591dd6b99">MyPets Denver Veterinary Clinic — Simulation</option><option value="62335dff-756b-47a7-ba94-95e240c3680d">VirtuaPet Staging A</option><option value="6d8bed91-b840-4884-9ecb-907b4cf0c65f">VirtuaPet Staging B</option></select>
+          <button id="verify-session" type="button">Verify access</button>
         </section>
-        <section id="layer8-link" class="notice link-panel" aria-label="Layer8 account connection" hidden>
-          <strong>Layer8 staging link</strong>
-          <button id="create-link-challenge" type="button">Create challenge</button>
-          <label for="link-challenge">Challenge</label>
-          <textarea id="link-challenge" rows="5" readonly></textarea>
-          <label for="link-proof">Layer8 proof</label>
-          <textarea id="link-proof" rows="4" autocomplete="off" spellcheck="false"></textarea>
-          <button id="complete-link" type="button">Complete link</button>
-          <span id="link-status">Verify your assigned organization first.</span>
+        <section class="safety-banner" aria-label="Pilot safety status"><span>Pilot</span><p>This workspace contains simulated clinic activity. Imaging tools are engineering prototypes and do not provide diagnosis, triage, or treatment recommendations.</p></section>
+        <section id="overview" class="metrics" aria-label="Workspace summary">
+          <article><span>Clinic</span><strong>MyPets Denver</strong><small>Private simulation</small></article><article><span>Authorized households</span><strong>8</strong><small>Entra identities created</small></article><article><span>Open clinical tasks</span><strong>0</strong><small>No real patient activity</small></article><article><span>Imaging queue</span><strong>Prototype</strong><small>Synthetic data only</small></article>
         </section>
-        <section class="notice" aria-label="Development status">
-          <strong>Phase 2 pilot preview</strong>
-          <span>This interface contains no live customer or clinical records. Clinical and regulation results require human review.</span>
+        <section class="workspace-grid">
+          <article id="patients" class="panel patient-panel"><div class="panel-heading"><div><p class="eyebrow">Today</p><h2>Clinic opening workspace</h2></div><span class="state ready">Ready</span></div><div class="empty-state"><div class="pet-mark" aria-hidden="true">✦</div><h3>No appointments scheduled</h3><p>The Denver mock clinic is open for private workflow rehearsal. Add only fictional pets after the invited guardians accept access.</p><a href="#care">Review opening checklist</a></div></article>
+          <article id="care" class="panel task-panel"><div class="panel-heading"><div><p class="eyebrow">Next actions</p><h2>Opening checklist</h2></div><span>3 steps</span></div><ol class="task-list"><li class="complete"><span>1</span><div><strong>Clinic and roles provisioned</strong><small>One administrator, seven guardian memberships</small></div></li><li><span>2</span><div><strong>Accept guardian invitations</strong><small>Each household signs in with its own account</small></div></li><li><span>3</span><div><strong>Run fictional visit rehearsal</strong><small>Consent, record access, sandbox payment, and mail receipt</small></div></li></ol></article>
         </section>
-        <section id="overview" class="hero-grid">
-          <article class="welcome"><p class="eyebrow">Welcome to VirtuaPet</p><h2>Start with one trusted Pet Profile</h2><p>Health, care, travel, identity, and 3D experiences will connect through permissions you control.</p><a href="#profile">See the foundation</a></article>
-          <article class="status"><p class="eyebrow">Platform status</p><div class="status-row"><span>Pet and consent APIs</span><b class="dot"></b></div><div class="status-row"><span>Clinic pilot workflows</span><em>Pilot code</em></div><div class="status-row"><span>Robot and travel</span><em>Discovery</em></div></article>
-        </section>
-        <section><div class="section-heading"><div><p class="eyebrow">Product system</p><h2>One dashboard, clear boundaries</h2></div><p>Every module displays its real release state.</p></div><div id="capabilities" class="card-grid" aria-live="polite"></div></section>
+        <section id="imaging" class="panel imaging-panel"><div class="panel-heading"><div><p class="eyebrow">DICOM foundation</p><h2>Imaging study pipeline</h2></div><span class="state prototype">Engineering prototype</span></div><div class="imaging-grid"><div class="scan-placeholder" aria-label="Synthetic scan placeholder"><span>01</span><p>De-identified, synthetic studies only</p></div><div class="imaging-copy"><h3>Safe by default</h3><p>The current worker validates a constrained classic CT series and preserves source geometry. Diagnostic viewing, segmentation, AI inference, 3D reconstruction, and clinical use remain unavailable until their separate validation gates pass.</p><div class="boundary-list"><span>✓ Strict intake checks</span><span>✓ Geometry metadata</span><span>— Diagnostic interpretation</span><span>— Clinical approval</span></div></div></div></section>
+        <section><div class="section-heading"><div><p class="eyebrow">Product system</p><h2>Capabilities and release state</h2></div><p>Every module carries its actual maturity so the care team knows what is safe to use.</p></div><div id="capabilities" class="card-grid" aria-live="polite"></div></section>
+        <section id="integrations" class="integration-section"><div id="layer8-link" class="notice link-panel" aria-label="Layer8 account connection" hidden><strong>Layer8 staging link</strong><button id="create-link-challenge" type="button">Create challenge</button><label for="link-challenge">Challenge</label><textarea id="link-challenge" rows="5" readonly></textarea><label for="link-proof">Layer8 proof</label><textarea id="link-proof" rows="4" autocomplete="off" spellcheck="false"></textarea><button id="complete-link" type="button">Complete link</button><span id="link-status">Verify your assigned organization first.</span></div></section>
       </main>
     </div>
     <script type="module" src="/src/main.ts"></script>
