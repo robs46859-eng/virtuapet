@@ -41,8 +41,13 @@ clinic, a real patient record system, or a clinically validated product.
   membership and seven distinct `guardian` memberships. `rob@stelar.host` is
   the administrator and is therefore not duplicated as a guardian.
 - The one-time Azure provisioning job completed successfully and was deleted.
-- The refreshed clinical dashboard and its one-page user guide are implemented
-  on this branch. They have not yet been deployed to `virtuapet.com`.
+- All participant invitations are accepted. On September 18, 2026, the live
+  `tipsygaymer@solamaze.com` session selected the Denver organization and the
+  API returned **Authenticated for MyPets Denver Veterinary Clinic —
+  Simulation**.
+- The refreshed clinical dashboard and its one-page user guide are deployed to
+  `virtuapet.com`. The public CSS, JavaScript, and PDF SHA-256 hashes matched
+  the verified local production build after publication.
 
 ## Repository artifacts
 
@@ -57,8 +62,8 @@ clinic, a real patient record system, or a clinically validated product.
 
 ## Exact boundaries
 
-- Invitation acceptance and separate authenticated sessions remain to be
-  verified for each guardian identity.
+- Separate authenticated Denver-session evidence remains to be captured for
+  the other participant identities; one accepted guardian account is verified.
 - No fictional pet has been submitted to a deployed API.
 - No Stripe customer, product, subscription, invoice, payment, refund or test
   clock has been created for this clinic.
@@ -70,8 +75,8 @@ clinic, a real patient record system, or a clinically validated product.
 
 ## Continue in this order
 
-1. Accept any outstanding Microsoft invitations and verify each participant
-   signs into the Denver simulation with a distinct Entra session.
+1. Verify the remaining participant identities sign into the Denver simulation
+   with distinct Entra sessions; one accepted guardian account already passes.
 2. Bind Denver Mock sandbox keys through a secret reference. Map Stripe Price
    IDs to internal entitlements; do not commit keys and do not use Payment Link
    IDs as entitlement identifiers.

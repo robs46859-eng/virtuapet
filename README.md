@@ -20,13 +20,16 @@ VirtuaPet is a shared pet-care platform for households, veterinary offices, care
 
 The private MyPets Denver simulation now has a dedicated VirtuaPet organization
 (`a8d2aeaa-8aaa-4fb8-9180-5e7591dd6b99`), eight authorized Entra identities,
-one clinic administrator and seven guardian memberships. Invitation acceptance,
-fictional pet seeding, sandbox billing, one labeled email round trip and the full
-positive/denial matrix remain execution gates.
+one clinic administrator and seven guardian memberships. All invitations are
+accepted, and one guardian's Denver-session verification is complete. Separate
+session evidence for the other participants, fictional pet seeding, sandbox
+billing, one labeled email round trip and the full positive/denial matrix remain
+execution gates.
 
-`apps/web` contains the refreshed warm clinical dashboard. It makes the Denver
-simulation easy to select, surfaces the opening checklist, and labels DICOM and
-other incomplete functions by their real engineering maturity. The attached
+`apps/web` contains the refreshed warm clinical dashboard, now deployed to
+`virtuapet.com`. It makes the Denver simulation easy to select, surfaces the
+opening checklist, and labels DICOM and other incomplete functions by their
+real engineering maturity. The attached
 design package informed visual treatment only; invented clinicians, patient
 telemetry, diagnosis, emergency dispatch, claims and validated imaging behavior
 were not adopted. The one-page user guide is available at

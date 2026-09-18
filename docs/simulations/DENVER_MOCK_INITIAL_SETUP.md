@@ -85,7 +85,8 @@ Initial multiplier: **60x** (one real minute equals one simulated hour). Start p
 - [x] HTTPS certificate verification passed. After root protection was enabled, anonymous requests to `/` and `/index.html` returned 401 on September 18, 2026.
 - [x] Private clinic landing HTML saved in Hostinger `public_html/index.html`, persisted after editor reload, and rendered successfully in an authenticated Chrome session on September 18, 2026. All status and safety notices were visible without layout breakage.
 - [x] Dedicated VirtuaPet organization and Entra staff/guardian identities provisioned. Organization UUID: `a8d2aeaa-8aaa-4fb8-9180-5e7591dd6b99`; one clinic administrator and seven guardian memberships verified on September 18, 2026.
-- [ ] Confirm invitation acceptance and a separate authenticated Denver-clinic session for each participant.
+- [x] All participant invitations accepted. One accepted guardian session (`tipsygaymer@solamaze.com`) authenticated against the Denver organization on September 18, 2026.
+- [ ] Capture separate authenticated Denver-clinic evidence for the remaining participant identities.
 - [ ] Sandbox credentials bound privately; no live Stripe settings reused.
 - [ ] Seed eight fictional pets through authenticated routes and record returned ids.
 - [ ] Confirm one labeled email round trip before enabling allowlisted workflow correspondence.
