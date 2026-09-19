@@ -1,0 +1,14 @@
+{
+  "id": "denver-mock",
+  "displayName": "MyPets Denver — Simulation",
+  "domain": "mypets.cc",
+  "timezone": "America/Denver",
+  "visibility": "private",
+  "simulationOnly": true,
+  "clock": { "multiplier": 60, "initialState": "paused", "scope": "mock-business-events-only" },
+  "capacity": { "squareFeet": 3800, "examRooms": 4, "veterinariansPerShift": 2, "appointmentsPerDay": 28, "basis": "provisional-assumption-not-regional-median" },
+  "stripe": { "accountName": "Denver Mock", "accountId": "acct_1UH0Ho6eXBPeFPqN", "livemode": false },
+  "outboundMail": { "enabled": false, "subjectPrefix": "[SIMULATION]", "allowlistSource": ".env.participants.json" },
+  "realClinicalCare": false,
+  "invasiveProcedures": "referral-only"
+}

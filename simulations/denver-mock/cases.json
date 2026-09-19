@@ -1,0 +1,10 @@
+[
+  { "participantId": "participant-01", "pet": "Aspen", "species": "dog", "scenario": "intake-consent-wellness", "offsetMinutes": 0 },
+  { "participantId": "participant-02", "pet": "Barkley", "species": "dog", "scenario": "inventory-estimate-sandbox-payment", "offsetMinutes": 60 },
+  { "participantId": "participant-03", "pet": "Pixel", "species": "cat", "scenario": "manual-fgs-review", "offsetMinutes": 120 },
+  { "participantId": "participant-04", "pet": "Summit", "species": "dog", "scenario": "referral-record-share-follow-up", "offsetMinutes": 180 },
+  { "participantId": "participant-05", "pet": "Mochi", "species": "cat", "scenario": "reminder-reschedule", "offsetMinutes": 240 },
+  { "participantId": "participant-06", "pet": "Scout", "species": "dog", "scenario": "sandbox-decline-retry-receipt", "offsetMinutes": 300 },
+  { "participantId": "participant-07", "pet": "Juniper", "species": "cat", "scenario": "consent-revocation-denial", "offsetMinutes": 360 },
+  { "participantId": "participant-08", "pet": "River", "species": "dog", "scenario": "recall-regulation-review-cancel-refund", "offsetMinutes": 420 }
+]

@@ -30,7 +30,7 @@ This decision does not claim commercial launch, clinical validation, production 
 | Manual FGS | Five action units, trained-human confirmation, total score, 4-of-10 review prompt | Accepted and tested |
 | FGS clinic control | Server-owned veterinary role plus active write consent | Accepted and tested |
 | Appointments | Clinic-member creation and listing with active Pet Profile consent | Accepted and tested |
-| Recalls | Clinic-member creation with accountable author | Accepted and tested |
+| Recalls | Eligible clinic-staff creation with active Pet Profile consent and accountable author | Accepted and tested |
 | Inventory | Validated nonnegative quantities and clinic ownership | Accepted and tested |
 | Clinic communications | Clinic membership, pet consent, author, and timestamp | Accepted and tested |
 | Regulation evidence | Reviewer-only creation, provenance, status, and verification endpoint | Accepted and tested |
@@ -50,7 +50,7 @@ This decision does not claim commercial launch, clinical validation, production 
 - FGS total four triggers review without prescribing treatment.
 - Unsupported regulation queries fail closed.
 - Only reviewer roles create or verify regulation evidence.
-- Clinic appointments and messages require membership and pet consent.
+- Clinic appointments, recalls, and messages require eligible membership and pet consent.
 - PostgreSQL round trips cover the accepted Phase 2 records.
 
 ## Deferred external acceptance
@@ -72,6 +72,7 @@ These items cannot be honestly completed without external participation:
 - Regulation evidence is informational until human verified and never replaces the relevant authority.
 - No clinical twin or surgical-rehearsal output is authorized in Phase 2.
 - No production, customer, DICOM, precise-location, payment-card, or SugarDaddy.lgbt eligibility data is authorized in the development environment.
+- `GET /v1/pets/:petId` remains guardian-only. The current API contract has no direct consent-aware clinic profile-read route; clinic workflows accept a known pet ID only after their own scope checks. A dedicated clinic read contract is required before a UI may claim direct clinic profile access.
 
 ## Phase 3 entry decision
 

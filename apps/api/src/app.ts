@@ -45,7 +45,31 @@ async function hasActiveClinicGrant(repository: PetRepository, petId: string, pr
 }
 
 async function clinicMembership(repository: PetRepository, principal: Principal) {
-  return principal.organizationId ? repository.findMembership(principal.organizationId, principal.userId) : undefined;
+  if (!principal.organizationId) return undefined;
+  const membership = await repository.findMembership(principal.organizationId, principal.userId);
+  return membership?.status === "active" && membership.revokedAt === null ? membership : undefined;
+}
+
+const clinicOperationRoles: readonly Membership["role"][] = ["clinic_admin", "veterinarian", "vet_staff"];
+
+async function authorizeClinicOrganization(
+  repository: PetRepository,
+  principal: Principal,
+  requestedOrganizationId: string,
+  allowedRoles: readonly Membership["role"][] = clinicOperationRoles,
+  roleError = "clinic_role_required"
+) {
+  if (!principal.organizationId) return { error: "tenant_context_required" } as const;
+  if (principal.organizationId.toLowerCase() !== requestedOrganizationId.toLowerCase()) {
+    return { error: "tenant_context_mismatch" } as const;
+  }
+  const organizationId = principal.organizationId.toLowerCase();
+  const membership = await repository.findMembership(organizationId, principal.userId);
+  if (!membership || membership.status !== "active" || membership.revokedAt !== null) {
+    return { error: "clinic_membership_required" } as const;
+  }
+  if (!allowedRoles.includes(membership.role)) return { error: roleError } as const;
+  return { membership, organizationId } as const;
 }
 
 export async function buildApp(options: AppOptions = {}) {
@@ -107,8 +131,12 @@ export async function buildApp(options: AppOptions = {}) {
     if (!await ownedPet(repository, request.params.petId, request.principal!)) return reply.code(404).send({ error: "not_found" });
     const parsed = createConsentGrantSchema.safeParse({ ...(request.body as object), petId: request.params.petId });
     if (!parsed.success) return reply.code(400).send({ error: "invalid_consent", issues: parsed.error.issues });
-    const grant: ConsentGrant = consentGrantSchema.parse({ ...parsed.data, grantId: randomUUID(), grantorUserId: request.principal!.userId, startsAt: new Date().toISOString(), revokedAt: null });
-    return reply.code(201).send(await repository.createGrant(grant));
+    const startsAt = new Date().toISOString();
+    const grant = consentGrantSchema.safeParse({ ...parsed.data, grantId: randomUUID(), grantorUserId: request.principal!.userId, startsAt, revokedAt: null });
+    if (!grant.success) return reply.code(400).send({ error: "invalid_consent", issues: grant.error.issues });
+    const grantee = await repository.findOrganizationById(grant.data.granteeId);
+    if (!grantee || grantee.kind !== "clinic") return reply.code(400).send({ error: "invalid_consent_grantee" });
+    return reply.code(201).send(await repository.createGrant(grant.data));
   });
 
   app.get<{ Params: { petId: string } }>("/v1/pets/:petId/consents", async (request, reply) => {
@@ -120,7 +148,9 @@ export async function buildApp(options: AppOptions = {}) {
     if (!await ownedPet(repository, request.params.petId, request.principal!)) return reply.code(404).send({ error: "not_found" });
     const grant = (await repository.listGrants(request.params.petId)).find(item => item.grantId === request.params.grantId);
     if (!grant) return reply.code(404).send({ error: "not_found" });
-    return repository.revokeGrant(grant.grantId, new Date().toISOString());
+    if (grant.revokedAt) return reply.code(409).send({ error: "consent_already_revoked" });
+    const revoked = await repository.revokeGrant(grant.grantId, new Date().toISOString());
+    return revoked ?? reply.code(409).send({ error: "consent_already_revoked" });
   });
 
   app.post<{ Params: { petId: string } }>("/v1/pets/:petId/feline-grimace-assessments", async (request, reply) => {
@@ -137,7 +167,14 @@ export async function buildApp(options: AppOptions = {}) {
 
   app.get<{ Params: { petId: string } }>("/v1/pets/:petId/feline-grimace-assessments", async (request, reply) => {
     const principal = request.principal!;
-    const allowed = Boolean(await ownedPet(repository, request.params.petId, principal)) || await hasActiveClinicGrant(repository, request.params.petId, principal, "pet.health.summary.read");
+    const owner = Boolean(await ownedPet(repository, request.params.petId, principal));
+    const membership = owner ? undefined : await clinicMembership(repository, principal);
+    const clinicReader = Boolean(
+      membership &&
+      clinicOperationRoles.includes(membership.role) &&
+      await hasActiveClinicGrant(repository, request.params.petId, principal, "pet.health.summary.read")
+    );
+    const allowed = owner || clinicReader;
     if (!allowed) return reply.code(404).send({ error: "not_found" });
     return { assessments: await repository.listGrimaceAssessments(request.params.petId) };
   });
@@ -175,23 +212,25 @@ export async function buildApp(options: AppOptions = {}) {
   });
 
   app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/members",async(request,reply)=>{
-    const principal=request.principal!; const admin=await repository.findMembership(request.params.organizationId,principal.userId); if(admin?.role!=="clinic_admin") return reply.code(403).send({error:"clinic_admin_required"});
+    const principal=request.principal!;
+    const authorization=await authorizeClinicOrganization(repository,principal,request.params.organizationId,["clinic_admin"],"clinic_admin_required");
+    if("error" in authorization) return reply.code(403).send({error:authorization.error});
     const parsed=createMembershipSchema.safeParse(request.body); if(!parsed.success) return reply.code(400).send({error:"invalid_membership",issues:parsed.error.issues});
-    const membership:Membership=membershipSchema.parse({...parsed.data,membershipId:randomUUID(),organizationId:request.params.organizationId,status:"active",createdAt:new Date().toISOString(),revokedAt:null}); return reply.code(201).send(await repository.createMembership(membership));
+    const membership:Membership=membershipSchema.parse({...parsed.data,membershipId:randomUUID(),organizationId:authorization.organizationId,status:"active",createdAt:new Date().toISOString(),revokedAt:null}); return reply.code(201).send(await repository.createMembership(membership));
   });
 
   app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/appointments",async(request,reply)=>{
-    const principal=request.principal!; const member=await repository.findMembership(request.params.organizationId,principal.userId); if(!member) return reply.code(403).send({error:"clinic_membership_required"});
+    const principal=request.principal!; const authorization=await authorizeClinicOrganization(repository,principal,request.params.organizationId); if("error" in authorization) return reply.code(403).send({error:authorization.error});
     const parsed=createAppointmentSchema.safeParse(request.body); if(!parsed.success) return reply.code(400).send({error:"invalid_appointment",issues:parsed.error.issues});
-    if(!await hasActiveClinicGrant(repository,parsed.data.petId,{...principal,organizationId:request.params.organizationId},"pet.profile.read")) return reply.code(403).send({error:"active_consent_required"});
-    const item:Appointment=appointmentSchema.parse({...parsed.data,appointmentId:randomUUID(),clinicId:request.params.organizationId,status:"scheduled",createdByUserId:principal.userId,createdAt:new Date().toISOString()}); return reply.code(201).send(await repository.createAppointment(item));
+    if(!await hasActiveClinicGrant(repository,parsed.data.petId,{...principal,organizationId:authorization.organizationId},"pet.profile.read")) return reply.code(403).send({error:"active_consent_required"});
+    const item:Appointment=appointmentSchema.parse({...parsed.data,appointmentId:randomUUID(),clinicId:authorization.organizationId,status:"scheduled",createdByUserId:principal.userId,createdAt:new Date().toISOString()}); return reply.code(201).send(await repository.createAppointment(item));
   });
 
-  app.get<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/appointments",async(request,reply)=>{ const member=await repository.findMembership(request.params.organizationId,request.principal!.userId); if(!member)return reply.code(403).send({error:"clinic_membership_required"}); return {appointments:await repository.listAppointments(request.params.organizationId)}; });
+  app.get<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/appointments",async(request,reply)=>{ const authorization=await authorizeClinicOrganization(repository,request.principal!,request.params.organizationId); if("error" in authorization)return reply.code(403).send({error:authorization.error}); return {appointments:await repository.listAppointments(authorization.organizationId)}; });
 
-  app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/recalls",async(request,reply)=>{ const principal=request.principal!; const member=await repository.findMembership(request.params.organizationId,principal.userId); if(!member)return reply.code(403).send({error:"clinic_membership_required"}); const parsed=createRecallSchema.safeParse(request.body); if(!parsed.success)return reply.code(400).send({error:"invalid_recall",issues:parsed.error.issues}); const item:Recall=recallSchema.parse({...parsed.data,recallId:randomUUID(),clinicId:request.params.organizationId,status:"open",createdByUserId:principal.userId,createdAt:new Date().toISOString()}); return reply.code(201).send(await repository.createRecall(item)); });
-  app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/inventory",async(request,reply)=>{ const principal=request.principal!; const member=await repository.findMembership(request.params.organizationId,principal.userId); if(!member||!["clinic_admin","vet_staff","veterinarian"].includes(member.role))return reply.code(403).send({error:"clinic_membership_required"}); const parsed=createInventoryItemSchema.safeParse(request.body); if(!parsed.success)return reply.code(400).send({error:"invalid_inventory",issues:parsed.error.issues}); const item:InventoryItem=inventoryItemSchema.parse({...parsed.data,inventoryItemId:randomUUID(),clinicId:request.params.organizationId,updatedByUserId:principal.userId,updatedAt:new Date().toISOString()}); return reply.code(201).send(await repository.createInventoryItem(item)); });
-  app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/messages",async(request,reply)=>{ const principal=request.principal!; const member=await repository.findMembership(request.params.organizationId,principal.userId); if(!member)return reply.code(403).send({error:"clinic_membership_required"}); const parsed=createClinicMessageSchema.safeParse(request.body); if(!parsed.success)return reply.code(400).send({error:"invalid_message",issues:parsed.error.issues}); if(!await hasActiveClinicGrant(repository,parsed.data.petId,{...principal,organizationId:request.params.organizationId},"pet.profile.read"))return reply.code(403).send({error:"active_consent_required"}); const item:ClinicMessage=clinicMessageSchema.parse({...parsed.data,messageId:randomUUID(),clinicId:request.params.organizationId,authorUserId:principal.userId,createdAt:new Date().toISOString()}); return reply.code(201).send(await repository.createClinicMessage(item)); });
+  app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/recalls",async(request,reply)=>{ const principal=request.principal!; const authorization=await authorizeClinicOrganization(repository,principal,request.params.organizationId); if("error" in authorization)return reply.code(403).send({error:authorization.error}); const parsed=createRecallSchema.safeParse(request.body); if(!parsed.success)return reply.code(400).send({error:"invalid_recall",issues:parsed.error.issues}); if(!await hasActiveClinicGrant(repository,parsed.data.petId,{...principal,organizationId:authorization.organizationId},"pet.profile.read"))return reply.code(403).send({error:"active_consent_required"}); const item:Recall=recallSchema.parse({...parsed.data,recallId:randomUUID(),clinicId:authorization.organizationId,status:"open",createdByUserId:principal.userId,createdAt:new Date().toISOString()}); return reply.code(201).send(await repository.createRecall(item)); });
+  app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/inventory",async(request,reply)=>{ const principal=request.principal!; const authorization=await authorizeClinicOrganization(repository,principal,request.params.organizationId); if("error" in authorization)return reply.code(403).send({error:authorization.error}); const parsed=createInventoryItemSchema.safeParse(request.body); if(!parsed.success)return reply.code(400).send({error:"invalid_inventory",issues:parsed.error.issues}); const item:InventoryItem=inventoryItemSchema.parse({...parsed.data,inventoryItemId:randomUUID(),clinicId:authorization.organizationId,updatedByUserId:principal.userId,updatedAt:new Date().toISOString()}); return reply.code(201).send(await repository.createInventoryItem(item)); });
+  app.post<{Params:{organizationId:string}}>("/v1/organizations/:organizationId/messages",async(request,reply)=>{ const principal=request.principal!; const authorization=await authorizeClinicOrganization(repository,principal,request.params.organizationId); if("error" in authorization)return reply.code(403).send({error:authorization.error}); const parsed=createClinicMessageSchema.safeParse(request.body); if(!parsed.success)return reply.code(400).send({error:"invalid_message",issues:parsed.error.issues}); if(!await hasActiveClinicGrant(repository,parsed.data.petId,{...principal,organizationId:authorization.organizationId},"pet.profile.read"))return reply.code(403).send({error:"active_consent_required"}); const item:ClinicMessage=clinicMessageSchema.parse({...parsed.data,messageId:randomUUID(),clinicId:authorization.organizationId,authorUserId:principal.userId,createdAt:new Date().toISOString()}); return reply.code(201).send(await repository.createClinicMessage(item)); });
 
   await registerImagingRoutes(app, repository, { signingKey: clinicalSigningKey, publicApiBaseUrl });
   await registerIdentityLinkRoutes(app, repository, options.identityLinks);

@@ -40,6 +40,13 @@ function render(items: Capability[]) {
     </article>`).join("");
 }
 
+document.querySelectorAll<HTMLAnchorElement>("nav a").forEach(link => {
+  link.addEventListener("click", () => {
+    document.querySelectorAll("nav a").forEach(item => item.classList.remove("active"));
+    link.classList.add("active");
+  });
+});
+
 const apiBaseUrl = import.meta.env.VITE_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8080";
 const entraClientId = import.meta.env.VITE_ENTRA_CLIENT_ID;
 const entraTenantId = import.meta.env.VITE_ENTRA_TENANT_ID;

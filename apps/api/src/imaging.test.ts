@@ -24,7 +24,10 @@ const verifier: PrincipalVerifier = async request => {
   if (kind === "guardian") return { userId: guardian, roles: ["guardian"] };
   if (kind === "vet") return { userId: veterinarian, organizationId: String(request.headers["x-test-org"] ?? clinic), roles: [] };
   if (kind === "vet-staff") return { userId: vetStaff, organizationId: String(request.headers["x-test-org"] ?? clinic), roles: [] };
-  if (kind === "platform") return { userId: platformAdmin, roles: ["platform_admin"] };
+  if (kind === "platform") {
+    const organizationId = typeof request.headers["x-test-org"] === "string" ? request.headers["x-test-org"] : undefined;
+    return { userId: platformAdmin, ...(organizationId ? { organizationId } : {}), roles: ["platform_admin"] };
+  }
   return undefined;
 };
 

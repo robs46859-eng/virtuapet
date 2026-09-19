@@ -14,6 +14,10 @@
     "verify:integration-isolation": "node scripts/verify-integration-isolation.mjs",
     "verify:identity-links": "node scripts/verify-identity-links.mjs",
     "verify:layer8-interoperability": "node scripts/verify-layer8-interoperability.mjs",
+    "test:denver": "node --test simulations/denver-mock/*.test.mjs",
+    "seed:denver": "node simulations/denver-mock/seed.mjs",
+    "verify:denver-stripe:dry-run": "node simulations/denver-mock/stripe-sandbox.mjs --dry-run",
+    "verify:denver-stripe": "node simulations/denver-mock/stripe-sandbox.mjs",
     "test": "npm run build --workspace=@virtuapet/contracts && npm run test --workspaces --if-present",
     "typecheck": "npm run build --workspace=@virtuapet/contracts && npm run typecheck --workspaces --if-present"
   },
