@@ -4,7 +4,7 @@
 
 **Repository:** `robs46859-eng/virtuapet`
 
-**Date:** September 18, 2026
+**Date:** September 19, 2026
 
 **State:** private simulation foundation; no real clinical operation
 
@@ -48,10 +48,17 @@ clinic, a real patient record system, or a clinically validated product.
 - The refreshed clinical dashboard and its one-page user guide are deployed to
   `virtuapet.com`. The public CSS, JavaScript, and PDF SHA-256 hashes matched
   the verified local production build after publication.
+- Merged commit `215a787a35d980e27c7f6ab8fc13a63ff9c77e9e` published the tested API image. Azure revision `virtuapet-staging-api--dm215a787` is healthy and receives 100% traffic.
+- The `api.virtuapet.com` CNAME now points to the VirtuaPet Container App. Public health and readiness return HTTP 200 with OIDC and PostgreSQL ready.
+- Eight fictional pets and eight consent grants were seeded transactionally after the seeder verified the exact Denver organization and each active membership.
+- Azure Key Vault contains the Denver Mock test secret. Stripe acceptance run `b76f4e62-e77e-48ca-9725-360e613157f7` passed exact-account matching, test-mode object checks, zero-dollar subscription idempotent replay and cancellation, and an expected decline with zero successful charges.
+- Mail run `mail-20260919T193828Z-c82c5492` passed allowlist, simulation-label, endpoint, message-ID and reply-thread verification using exported `.eml` evidence.
+- A live `rob@stelar.host` clinic-admin session authenticated to Denver and was denied access to VirtuaPet Staging A with `active_membership_required`.
 
 ## Repository artifacts
 
 - [Initial setup and compliance register](DENVER_MOCK_INITIAL_SETUP.md)
+- [September 19 acceptance record](DENVER_MOCK_ACCEPTANCE_2026-09-19.md)
 - [Branch README](../../simulations/denver-mock/README.md)
 - `simulations/denver-mock/config.json`: proposed private/sandbox settings
 - `simulations/denver-mock/clock.mjs`: isolated simulation clock
@@ -62,12 +69,10 @@ clinic, a real patient record system, or a clinically validated product.
 
 ## Exact boundaries
 
-- Separate authenticated Denver-session evidence remains to be captured for
-  the other participant identities; one accepted guardian account is verified.
-- No fictional pet has been submitted to a deployed API.
-- No Stripe customer, product, subscription, invoice, payment, refund or test
-  clock has been created for this clinic.
-- Outbound mail is disabled. No workflow email has been sent.
+- Separate fresh authenticated Denver-session evidence remains to be captured for the remaining participant identities; one accepted guardian and one clinic administrator have positive evidence.
+- The pet/consent seed was an administrative transactional fixture run inside the deployed container. Authenticated end-user create/read/revoke workflows still need a browser/API rehearsal.
+- Stripe execution was test mode only. No live charge exists; the decline produced zero successful charges, so a refund test was neither possible nor appropriate.
+- Application outbound mail remains disabled. The completed round trip was a manually initiated, allowlisted simulation message, verified from exported evidence.
 - Provider adapters, DICOM and surgical-planning artifacts remain prototype or
   research paths and are not clinical services.
 - Regulatory sources are an applicability register. No permit, professional
@@ -86,31 +91,24 @@ clinic, a real patient record system, or a clinically validated product.
   subscription plus an expected decline without a successful charge.
 - The mail harness prepares and verifies an allowlisted `[SIMULATION]` request
   and reply using exported `.eml` evidence; it contains no sending transport.
-- Local validation passes: 262 API tests, 25 Denver tests, and workspace
-  typechecking. Nothing in this checkpoint proves the new API image is deployed,
-  pets exist in the shared database, Stripe objects exist, or mail was received.
+- Local validation passes: 262 API tests, 25 Denver tests, workspace typechecking
+  and the production build. The deployed, provider and browser evidence above is
+  recorded separately from those repository checks.
 
-## Continue in this order
+## Remaining acceptance work
 
 1. Verify the remaining participant identities sign into the Denver simulation
-   with distinct Entra sessions; one accepted guardian account already passes.
-2. Bind Denver Mock sandbox keys through a secret reference. Map Stripe Price
-   IDs to internal entitlements; do not commit keys and do not use Payment Link
-   IDs as entitlement identifiers.
-3. Seed the eight fictional pets through authenticated API routes and capture
-   returned IDs in an ignored run artifact.
-4. Run consent, appointment, recall, message, inventory, manual FGS and
+   with distinct Entra sessions.
+2. Run authenticated pet read and consent revoke/expired denial paths against
+   the seeded fixtures. Preserve the fixture IDs only in ignored evidence.
+3. Run consent, appointment, recall, message, inventory, manual FGS and
    regulation-evidence workflows, including cross-tenant and revoked-consent
    denials.
-5. Verify one `[SIMULATION]` mail round trip before enabling allowlisted
-   correspondence. Never send passwords or clinical claims.
-6. Exercise sandbox billing success, decline, cancellation and refund with
-   Stripe-supported test time. Application accelerated time does not advance
-   Stripe.
-7. Build and deploy the dashboard update only after its local build, responsive
-   visual review, PDF inspection, and authenticated organization check pass.
-8. Produce an evidence report that separates repository tests, deployed API
-   responses, received messages and visible browser results.
+4. Add a runtime billing adapter only when product entitlement behavior is
+   defined; keep the test secret in Key Vault and do not inject an unused secret
+   into the API.
+5. Rehearse backup restore, alert delivery, dependency outage and rollback.
+6. Repeat local, CI, deployed API, provider and browser checks after changes.
 
 ## Rollback and recovery
 

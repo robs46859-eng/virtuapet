@@ -59,8 +59,8 @@ Participant addresses are stored only in the local ignored roster, indexed in th
 
 | Feature group | Exercise | Current setup status |
 |---|---|---|
-| Organizations, staff and Entra identities | Dedicated mock clinic, eight authorized identities; positive and denied access | Organization and memberships provisioned; invitation acceptance and authenticated checks remain |
-| Pets and consent | Create profiles, grants, expiry and revocation | API foundation exists; mock data not seeded |
+| Organizations, staff and Entra identities | Dedicated mock clinic, eight authorized identities; positive and denied access | All invitations accepted; Denver admin success and Staging A denial verified live; fresh evidence per remaining guardian remains |
+| Pets and consent | Create profiles, grants, expiry and revocation | Eight fictional pets and bounded grants seeded transactionally; live revocation drill remains |
 | Appointments, recalls, messages | Book, notify, follow up and inspect authorship | Records available; actual delivery/automation must be tested separately |
 | Inventory | Receive/use stock and reject invalid quantities | Foundation available; no physical purchasing |
 | Manual FGS | Synthetic scores and clinician-review prompts | Engineering workflow; no actual pain assessment |
@@ -68,8 +68,8 @@ Participant addresses are stored only in the local ignored roster, indexed in th
 | Layer8 links/policy | Separate identity providers, account consent, policy denial | Isolated sandbox wiring pending; leave existing live/staging settings unchanged |
 | DICOM/planning | Offline synthetic CT test and labeled prototype review | Research-only; no clinical twin or robot operation |
 | Pawsome3D/PawPath/GibiWorld | Test available adapter/preflight contracts | Real provider delivery cannot be marked passed until connected |
-| Stripe lifecycle | Test customer, invoice/payment, decline/refund; repeat idempotently | Denver Mock sandbox verified in browser; no objects created yet |
-| Operational readiness | Privacy, tenant denial, mail allowlist, backup and audit evidence | Dedicated environment and end-to-end verification remain pending |
+| Stripe lifecycle | Test customer, subscription/payment, decline/cancellation; repeat idempotently | Test account matched; $0 subscription replay/cancellation and expected decline with zero charges passed; refund remains inapplicable until a successful test payment exists |
+| Operational readiness | Privacy, tenant denial, mail allowlist, backup and audit evidence | Public readiness, one live cross-tenant denial and one labeled mail round trip pass; restore, alert delivery and full per-identity matrix remain |
 
 ## Clock contract
 
@@ -86,9 +86,9 @@ Initial multiplier: **60x** (one real minute equals one simulated hour). Start p
 - [x] Private clinic landing HTML saved in Hostinger `public_html/index.html`, persisted after editor reload, and rendered successfully in an authenticated Chrome session on September 18, 2026. All status and safety notices were visible without layout breakage.
 - [x] Dedicated VirtuaPet organization and Entra staff/guardian identities provisioned. Organization UUID: `a8d2aeaa-8aaa-4fb8-9180-5e7591dd6b99`; one clinic administrator and seven guardian memberships verified on September 18, 2026.
 - [x] All participant invitations accepted. One accepted guardian session (`tipsygaymer@solamaze.com`) authenticated against the Denver organization on September 18, 2026.
-- [ ] Capture separate authenticated Denver-clinic evidence for the remaining participant identities.
-- [ ] Sandbox credentials bound privately; no live Stripe settings reused.
-- [ ] Seed eight fictional pets through authenticated routes and record returned ids.
-- [ ] Confirm one labeled email round trip before enabling allowlisted workflow correspondence.
+- [x] Clinic administrator authenticated to Denver and was denied Staging A on September 19; capture separate fresh Denver-clinic evidence for the remaining participant identities.
+- [x] Denver Mock test secret stored in Azure Key Vault and consumed without display by the isolated acceptance harness; no live Stripe setting was reused.
+- [x] Eight deterministic fictional pets and eight bounded consent grants seeded transactionally in staging on September 19. This administrative fixture run is not an authenticated end-user create workflow.
+- [x] One allowlisted `[SIMULATION]` request/reply round trip verified from exported `.eml` evidence on September 19.
 - [ ] Run each available feature; keep unsupported capabilities explicitly blocked.
-- [ ] Complete failure paths and collect a per-step evidence report. Full workflow is not yet confirmed.
+- [ ] Complete the remaining live revocation, feature, restore, alert and per-identity failure paths. See `DENVER_MOCK_ACCEPTANCE_2026-09-19.md` for the current evidence boundary.

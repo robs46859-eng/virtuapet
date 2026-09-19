@@ -16,15 +16,20 @@ link/policy drills pass. See
 
 VirtuaPet is a shared pet-care platform for households, veterinary offices, caregivers, travel partners, and interactive 3D experiences. This repository starts with the safety and data foundation needed by every later product.
 
-## Denver mock clinic and dashboard update — 2026-09-18
+## Denver mock clinic and dashboard update — 2026-09-19
 
 The private MyPets Denver simulation now has a dedicated VirtuaPet organization
 (`a8d2aeaa-8aaa-4fb8-9180-5e7591dd6b99`), eight authorized Entra identities,
 one clinic administrator and seven guardian memberships. All invitations are
-accepted, and one guardian's Denver-session verification is complete. Separate
-session evidence for the other participants, fictional pet seeding, sandbox
-billing, one labeled email round trip and the full positive/denial matrix remain
-execution gates.
+accepted. The exact tested API image from merged commit
+`215a787a35d980e27c7f6ab8fc13a63ff9c77e9e` is deployed as revision
+`virtuapet-staging-api--dm215a787` at 100% traffic. Public health and readiness
+pass at `api.virtuapet.com`; OIDC and PostgreSQL report ready. Eight fictional
+pets and eight bounded consent grants were seeded transactionally after active
+membership checks. Denver Mock Stripe test-mode acceptance, a labeled mail
+round trip, an authenticated clinic-admin success, and a live cross-tenant
+denial passed. Separate fresh browser evidence for every remaining guardian and
+the feature-by-feature clinical workflow rehearsal remain acceptance work.
 
 `apps/web` contains the refreshed warm clinical dashboard, now deployed to
 `virtuapet.com`. It makes the Denver simulation easy to select, surfaces the
@@ -36,7 +41,8 @@ were not adopted. The one-page user guide is available at
 `output/pdf/virtuapet-dashboard-update-guide.pdf` and is bundled into the web
 build from `apps/web/public`. See
 `docs/simulations/DENVER_MOCK_HANDOFF.md` for operational evidence and remaining
-steps.
+steps. The dated execution record is
+`docs/simulations/DENVER_MOCK_ACCEPTANCE_2026-09-19.md`.
 
 ## Current status
 
