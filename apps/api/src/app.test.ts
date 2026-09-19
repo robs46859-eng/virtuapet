@@ -9,11 +9,12 @@ const reviewer = "394c6b7d-d2bf-49e1-acbf-e9490b990146";
 const platformAdmin = "8b149ab0-04a6-4b4f-8c69-ff50613e2705";
 const verifier: PrincipalVerifier = async request => {
   const kind = request.headers["x-test-principal"];
-  if (kind === "guardian") return { userId: guardian, roles: ["guardian"] };
+  const selectedOrganization = typeof request.headers["x-test-org"] === "string" ? request.headers["x-test-org"] : undefined;
+  if (kind === "guardian") return { userId: guardian, ...(selectedOrganization ? { organizationId: selectedOrganization } : {}), roles: ["guardian"] };
   if (kind === "vet") return { userId: veterinarian, organizationId: String(request.headers["x-test-org"] ?? clinic), roles: [] };
-  if (kind === "reviewer") return { userId: reviewer, roles: ["regulatory_reviewer"] };
-  if (kind === "platform") return { userId: platformAdmin, roles: ["platform_admin"] };
-  if (kind === "clinic-admin") return { userId: platformAdmin, organizationId: clinic, roles: [] };
+  if (kind === "reviewer") return { userId: reviewer, ...(selectedOrganization ? { organizationId: selectedOrganization } : {}), roles: ["regulatory_reviewer"] };
+  if (kind === "platform") return { userId: platformAdmin, ...(selectedOrganization ? { organizationId: selectedOrganization } : {}), roles: ["platform_admin"] };
+  if (kind === "clinic-admin") return { userId: platformAdmin, organizationId: selectedOrganization ?? clinic, roles: [] };
   return undefined;
 };
 let app: Awaited<ReturnType<typeof buildApp>> | undefined;
@@ -74,12 +75,34 @@ describe("VirtuaPet Phase 2 API", () => {
   it("creates and revokes a time-limited clinic grant", async () => {
     app = await buildApp({ verifyPrincipal: verifier, environment: "test" });
     const pet = await createPet();
-    const created = await app.inject({ method: "POST", url: `/v1/pets/${pet.petId}/consents`, headers: headers("guardian"), payload: { granteeId: clinic, scopes: ["pet.health.summary.read", "pet.health.observation.write"], expiresAt: future(), purpose: "Clinic pain assessment" } });
+    const { organizationId } = await createClinic();
+    const created = await app.inject({ method: "POST", url: `/v1/pets/${pet.petId}/consents`, headers: headers("guardian"), payload: { granteeId: organizationId, scopes: ["pet.health.summary.read", "pet.health.observation.write"], expiresAt: future(), purpose: "Clinic pain assessment" } });
     expect(created.statusCode).toBe(201);
     const grant = created.json();
     const revoked = await app.inject({ method: "DELETE", url: `/v1/pets/${pet.petId}/consents/${grant.grantId}`, headers: headers("guardian") });
     expect(revoked.statusCode).toBe(200);
     expect(revoked.json().revokedAt).toBeTruthy();
+    const replayed = await app.inject({ method: "DELETE", url: `/v1/pets/${pet.petId}/consents/${grant.grantId}`, headers: headers("guardian") });
+    expect(replayed.statusCode).toBe(409);
+    expect(replayed.json()).toEqual({ error: "consent_already_revoked" });
+  });
+
+  it("rejects expired consent and recipients that are not existing clinics", async () => {
+    app = await buildApp({ verifyPrincipal: verifier, environment: "test" });
+    const pet = await createPet();
+    const { organizationId } = await createClinic();
+    const expired = await app.inject({ method: "POST", url: `/v1/pets/${pet.petId}/consents`, headers: headers("guardian"), payload: { granteeId: organizationId, scopes: ["pet.profile.read"], expiresAt: new Date(Date.now() - 60_000).toISOString(), purpose: "Expired clinic access" } });
+    expect(expired.statusCode).toBe(400);
+    expect(expired.json().error).toBe("invalid_consent");
+
+    const missingClinic = await app.inject({ method: "POST", url: `/v1/pets/${pet.petId}/consents`, headers: headers("guardian"), payload: { granteeId: "9f512544-7409-463a-8265-c922c1e207be", scopes: ["pet.profile.read"], expiresAt: future(), purpose: "Unknown clinic access" } });
+    expect(missingClinic.statusCode).toBe(400);
+    expect(missingClinic.json()).toEqual({ error: "invalid_consent_grantee" });
+
+    const household = await app.inject({ method: "POST", url: "/v1/organizations", headers: headers("platform"), payload: { name: "Test Household", kind: "household" } });
+    const householdGrant = await app.inject({ method: "POST", url: `/v1/pets/${pet.petId}/consents`, headers: headers("guardian"), payload: { granteeId: household.json().organization.organizationId, scopes: ["pet.profile.read"], expiresAt: future(), purpose: "Household access" } });
+    expect(householdGrant.statusCode).toBe(400);
+    expect(householdGrant.json()).toEqual({ error: "invalid_consent_grantee" });
   });
 
   it("requires active consent before a trained clinic assessor can record FGS", async () => {
@@ -93,8 +116,12 @@ describe("VirtuaPet Phase 2 API", () => {
     const scored = await app.inject({ method: "POST", url: `/v1/pets/${pet.petId}/feline-grimace-assessments`, headers: vetHeaders, payload });
     expect(scored.statusCode).toBe(201);
     expect(scored.json()).toMatchObject({ totalScore: 4, veterinaryReviewRequired: true, assessorTrainingConfirmed: true });
+    expect((await app.inject({ method: "GET", url: `/v1/pets/${pet.petId}/feline-grimace-assessments`, headers: vetHeaders })).statusCode).toBe(200);
+    const nonmemberRead = await app.inject({ method: "GET", url: `/v1/pets/${pet.petId}/feline-grimace-assessments`, headers: { ...headers("reviewer"), "x-test-org": organizationId } });
+    expect(nonmemberRead.statusCode).toBe(404);
     await app.inject({method:"DELETE",url:`/v1/pets/${pet.petId}/consents/${grantResponse.json().grantId}`,headers:headers("guardian")});
     expect((await app.inject({method:"POST",url:`/v1/pets/${pet.petId}/feline-grimace-assessments`,headers:vetHeaders,payload})).statusCode).toBe(403);
+    expect((await app.inject({ method: "GET", url: `/v1/pets/${pet.petId}/feline-grimace-assessments`, headers: vetHeaders })).statusCode).toBe(404);
   });
 
   it("fails unsupported regulation queries closed", async () => {
@@ -120,5 +147,52 @@ describe("VirtuaPet Phase 2 API", () => {
     expect((await app.inject({method:"POST",url:`/v1/organizations/${organizationId}/recalls`,headers:vetHeaders,payload:{petId:pet.petId,dueAt:"2027-06-02T17:00:00.000Z",reason:"Follow-up"}})).statusCode).toBe(201);
     expect((await app.inject({method:"POST",url:`/v1/organizations/${organizationId}/inventory`,headers:vetHeaders,payload:{sku:"VAC-001",name:"Pilot inventory item",quantityOnHand:10,reorderPoint:3}})).statusCode).toBe(201);
     expect((await app.inject({method:"POST",url:`/v1/organizations/${organizationId}/messages`,headers:vetHeaders,payload:{petId:pet.petId,subject:"Visit preparation",body:"Please bring the current medication list."}})).statusCode).toBe(201);
+  });
+
+  it("requires active pet profile consent for recalls",async()=>{
+    app=await buildApp({verifyPrincipal:verifier,environment:"test"}); const pet=await createPet(); const {organizationId,member}=await createClinic(); expect(member.statusCode).toBe(201); const vetHeaders={...headers("vet"),"x-test-org":organizationId};
+    const payload={petId:pet.petId,dueAt:"2027-06-02T17:00:00.000Z",reason:"Simulation follow-up"};
+    const before=await app.inject({method:"POST",url:`/v1/organizations/${organizationId}/recalls`,headers:vetHeaders,payload});
+    expect(before.statusCode).toBe(403); expect(before.json()).toEqual({error:"active_consent_required"});
+    const grant=await app.inject({method:"POST",url:`/v1/pets/${pet.petId}/consents`,headers:headers("guardian"),payload:{granteeId:organizationId,scopes:["pet.profile.read"],expiresAt:future(),purpose:"Recall workflow"}});
+    expect((await app.inject({method:"POST",url:`/v1/organizations/${organizationId}/recalls`,headers:vetHeaders,payload})).statusCode).toBe(201);
+    await app.inject({method:"DELETE",url:`/v1/pets/${pet.petId}/consents/${grant.json().grantId}`,headers:headers("guardian")});
+    const after=await app.inject({method:"POST",url:`/v1/organizations/${organizationId}/recalls`,headers:vetHeaders,payload});
+    expect(after.statusCode).toBe(403); expect(after.json()).toEqual({error:"active_consent_required"});
+  });
+
+  it("denies guardian members every clinic staff operation",async()=>{
+    app=await buildApp({verifyPrincipal:verifier,environment:"test"}); const pet=await createPet(); const {organizationId}=await createClinic();
+    const adminHeaders={...headers("platform"),"x-test-org":organizationId};
+    expect((await app.inject({method:"POST",url:`/v1/organizations/${organizationId}/members`,headers:adminHeaders,payload:{userId:guardian,role:"guardian"}})).statusCode).toBe(201);
+    await app.inject({method:"POST",url:`/v1/pets/${pet.petId}/consents`,headers:headers("guardian"),payload:{granteeId:organizationId,scopes:["pet.profile.read"],expiresAt:future(),purpose:"Clinic role denial test"}});
+    const guardianHeaders={...headers("guardian"),"x-test-org":organizationId};
+    const attempts=[
+      app.inject({method:"POST",url:`/v1/organizations/${organizationId}/members`,headers:guardianHeaders,payload:{userId:reviewer,role:"vet_staff"}}),
+      app.inject({method:"POST",url:`/v1/organizations/${organizationId}/appointments`,headers:guardianHeaders,payload:{petId:pet.petId,startsAt:"2027-01-02T17:00:00.000Z",durationMinutes:30,reason:"Denied guardian booking"}}),
+      app.inject({method:"GET",url:`/v1/organizations/${organizationId}/appointments`,headers:guardianHeaders}),
+      app.inject({method:"POST",url:`/v1/organizations/${organizationId}/recalls`,headers:guardianHeaders,payload:{petId:pet.petId,dueAt:"2027-06-02T17:00:00.000Z",reason:"Denied guardian recall"}}),
+      app.inject({method:"POST",url:`/v1/organizations/${organizationId}/inventory`,headers:guardianHeaders,payload:{sku:"DENY-001",name:"Denied inventory item",quantityOnHand:1,reorderPoint:0}}),
+      app.inject({method:"POST",url:`/v1/organizations/${organizationId}/messages`,headers:guardianHeaders,payload:{petId:pet.petId,subject:"Denied message",body:"A guardian cannot author clinic correspondence."}})
+    ];
+    const responses=await Promise.all(attempts);
+    expect(responses.map(response=>response.statusCode)).toEqual([403,403,403,403,403,403]);
+    expect(responses.map(response=>response.json().error)).toEqual(["clinic_admin_required","clinic_role_required","clinic_role_required","clinic_role_required","clinic_role_required","clinic_role_required"]);
+  });
+
+  it("rejects a clinic URL that differs from the selected organization",async()=>{
+    app=await buildApp({verifyPrincipal:verifier,environment:"test"}); const pet=await createPet(); const {organizationId}=await createClinic();
+    const mismatchedHeaders={...headers("vet"),"x-test-org":"9f512544-7409-463a-8265-c922c1e207be"};
+    const attempts=[
+      app.inject({method:"POST",url:`/v1/organizations/${organizationId}/members`,headers:mismatchedHeaders,payload:{userId:reviewer,role:"vet_staff"}}),
+      app.inject({method:"POST",url:`/v1/organizations/${organizationId}/appointments`,headers:mismatchedHeaders,payload:{petId:pet.petId,startsAt:"2027-01-02T17:00:00.000Z",durationMinutes:30,reason:"Wrong tenant"}}),
+      app.inject({method:"GET",url:`/v1/organizations/${organizationId}/appointments`,headers:mismatchedHeaders}),
+      app.inject({method:"POST",url:`/v1/organizations/${organizationId}/recalls`,headers:mismatchedHeaders,payload:{petId:pet.petId,dueAt:"2027-06-02T17:00:00.000Z",reason:"Wrong tenant"}}),
+      app.inject({method:"POST",url:`/v1/organizations/${organizationId}/inventory`,headers:mismatchedHeaders,payload:{sku:"DENY-002",name:"Wrong tenant item",quantityOnHand:1,reorderPoint:0}}),
+      app.inject({method:"POST",url:`/v1/organizations/${organizationId}/messages`,headers:mismatchedHeaders,payload:{petId:pet.petId,subject:"Wrong tenant",body:"This request must fail before validation."}})
+    ];
+    const responses=await Promise.all(attempts);
+    expect(responses.map(response=>response.statusCode)).toEqual([403,403,403,403,403,403]);
+    expect(responses.map(response=>response.json().error)).toEqual(Array(6).fill("tenant_context_mismatch"));
   });
 });

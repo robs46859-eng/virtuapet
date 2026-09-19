@@ -73,6 +73,23 @@ clinic, a real patient record system, or a clinically validated product.
 - Regulatory sources are an applicability register. No permit, professional
   license, parcel approval or compliance certification has been obtained.
 
+## September 19 build checkpoint
+
+- The API authorization update requires an active, non-revoked staff membership
+  in the selected clinic organization for clinic operations. Feline assessment
+  reads require both membership and the correct active consent scope.
+- The deterministic fixture seeder validates the exact Denver organization,
+  eight distinct guardians, least-privilege consent scopes, bounded expiry,
+  replay consistency and transactional rollback.
+- The Stripe harness accepts test keys only, verifies the exact Denver Mock
+  account before mutation, uses idempotency keys, and exercises a zero-dollar
+  subscription plus an expected decline without a successful charge.
+- The mail harness prepares and verifies an allowlisted `[SIMULATION]` request
+  and reply using exported `.eml` evidence; it contains no sending transport.
+- Local validation passes: 262 API tests, 25 Denver tests, and workspace
+  typechecking. Nothing in this checkpoint proves the new API image is deployed,
+  pets exist in the shared database, Stripe objects exist, or mail was received.
+
 ## Continue in this order
 
 1. Verify the remaining participant identities sign into the Denver simulation

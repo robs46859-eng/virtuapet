@@ -19,6 +19,7 @@ export interface PetRepository {
   listRegulationEvidence(countryCode: string, regionCode?: string): Promise<RegulationEvidence[]>;
   verifyRegulationEvidence(evidenceId: string, verifiedAt: string): Promise<RegulationEvidence | undefined>;
   createOrganization(organization: Organization): Promise<Organization>;
+  findOrganizationById(organizationId: string): Promise<Organization | undefined>;
   createMembership(membership: Membership): Promise<Membership>;
   findMembership(organizationId: string, userId: string): Promise<Membership | undefined>;
   createAppointment(appointment: Appointment): Promise<Appointment>;
@@ -133,8 +134,9 @@ export class MemoryPetRepository implements PetRepository {
   }
   async verifyRegulationEvidence(evidenceId: string, verifiedAt: string) { const item = this.regulationEvidence.get(evidenceId); if (!item) return undefined; const verified = { ...item, humanVerifiedAt: verifiedAt }; this.regulationEvidence.set(evidenceId, verified); return structuredClone(verified); }
   async createOrganization(item: Organization) { this.organizations.set(item.organizationId, structuredClone(item)); return structuredClone(item); }
+  async findOrganizationById(organizationId: string) { const item = this.organizations.get(organizationId); return item ? structuredClone(item) : undefined; }
   async createMembership(item: Membership) { this.memberships.set(item.membershipId, structuredClone(item)); return structuredClone(item); }
-  async findMembership(organizationId: string, userId: string) { const item = [...this.memberships.values()].find(value => value.organizationId === organizationId && value.userId === userId && value.status === "active"); return item ? structuredClone(item) : undefined; }
+  async findMembership(organizationId: string, userId: string) { const item = [...this.memberships.values()].find(value => value.organizationId === organizationId && value.userId === userId && value.status === "active" && value.revokedAt === null); return item ? structuredClone(item) : undefined; }
   async createAppointment(item: Appointment) { this.appointments.set(item.appointmentId, structuredClone(item)); return structuredClone(item); }
   async listAppointments(clinicId: string) { return [...this.appointments.values()].filter(item => item.clinicId === clinicId).map(item => structuredClone(item)); }
   async createRecall(item: Recall) { this.recalls.set(item.recallId, structuredClone(item)); return structuredClone(item); }

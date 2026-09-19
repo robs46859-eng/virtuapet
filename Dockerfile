@@ -24,6 +24,9 @@ COPY --from=build --chown=virtuapet:virtuapet /app/packages/contracts/dist ./pac
 COPY --chown=virtuapet:virtuapet scripts/migrate.mjs ./scripts/migrate.mjs
 COPY --chown=virtuapet:virtuapet scripts/bootstrap-postgres.mjs ./scripts/bootstrap-postgres.mjs
 COPY --chown=virtuapet:virtuapet infra/migrations ./infra/migrations
+COPY --chown=virtuapet:virtuapet simulations/denver-mock/cases.json ./simulations/denver-mock/cases.json
+COPY --chown=virtuapet:virtuapet simulations/denver-mock/workflow.mjs ./simulations/denver-mock/workflow.mjs
+COPY --chown=virtuapet:virtuapet simulations/denver-mock/seed.mjs ./simulations/denver-mock/seed.mjs
 USER virtuapet
 EXPOSE 8080
 CMD ["node", "apps/api/dist/server.js"]

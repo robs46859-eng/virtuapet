@@ -21,7 +21,9 @@ import { evaluateClinicalGates } from "./qa.js";
 import { runFullValidation } from "./validation-harness.js";
 
 async function clinicMembership(repository: PetRepository, principal: Principal) {
-  return principal.organizationId ? repository.findMembership(principal.organizationId, principal.userId) : undefined;
+  if (!principal.organizationId) return undefined;
+  const membership = await repository.findMembership(principal.organizationId, principal.userId);
+  return membership?.status === "active" && membership.revokedAt === null ? membership : undefined;
 }
 
 async function hasActiveClinicGrant(
